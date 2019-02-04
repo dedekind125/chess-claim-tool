@@ -1,0 +1,63 @@
+/*
+Chess Claim Tool: mac.css
+
+Copyright (C) 2019 Serntedakis Athanasios <thanasis@brainfriz.com>
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+QPushButton#AddSource {
+    border:none;
+    background-color: transparent;
+    margin-right: 7px;
+}
+QPushButton#DeleteSource {
+    border:none;
+    background-color: transparent;
+}
+QPushButton#Scan {
+    background-color:#1496e8;
+    font-size: 17px;
+    font-weight:bold;
+    color:#fff;
+}
+QPushButton#Stop{
+    background-color:#f22618;
+    font-size: 17px;
+    font-weight:bold;
+    color:#fff;
+}
+QPushButton#sources{
+  font-size: 13px;
+  padding: 5px;
+}
+QStatusBar{
+  border-top: 1px solid #DCDCDC;
+}
+QLabel#download-image,#source-image,#spinner{
+    margin-right: 10px;
+}
+QHeaderView{
+  background-color:#fff;
+  font-weight:bold;
+  color: #605f5f;
+  font-size: 12px;
+}
+QLabel#appname{
+  font-weight: bold;
+  font-size: 14px;
+}
+QLabel#copyright{
+  font-size: 10px;
+}
