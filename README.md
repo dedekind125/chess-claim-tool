@@ -20,6 +20,8 @@ The program is meant to work using either local pgn files and/or pgn files from 
 
 This version is compatible with the macOS and Windows.
 
+**Download installation packages** through the release page: [https://github.com/Dedekind125/chess-claim-tool/releases](https://github.com/Dedekind125/chess-claim-tool/releases)
+
 
 # Dependencies
 * Python 3
