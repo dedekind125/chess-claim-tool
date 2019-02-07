@@ -1,6 +1,6 @@
 # Introduction
 
-According to the official FIDE Regulations a game of chess - in some special cases - could end in a draw either by the claim of the player or the intervention of the arbiter.
+According to the official FIDE Regulations in some special cases, a game of chess could end in a draw either by a claim of the player or by the intervention of the arbiter.
 These cases are:
 
 * 3 Fold Repetition(claim by player)
@@ -10,11 +10,11 @@ These cases are:
 
 *Detailed explanation: [FIDE Laws of Chess - Article 9](http://www.fide.com/fide/handbook.html?id=208&view=article)*
 
-The idea behind this program is to perform checks <b> in a real time updating pgn</b> for these claims and help the arbiter intervene accordingly.
+The idea behind this program is to perform checks <b> in real-time updating pgn</b> for these claims and help the arbiters intervene accordingly.
 
 This will be especially useful for tournaments where the games are recorded with the [DGT Livechess software](http://www.digitalgametechnology.com/index.php/products/electronic-boards/serial-tournament/285-dgt-livechess-software13?mavikthumbnails_display_ratio=2) (or any other similar software).
 
-The program is meant to work using either local pgn files and/or pgn files from the web. This means that is an independent, from the live games operator, tool and can be used like football VAR by the arbiters.
+The program is meant to work using either local pgn files and/or pgn files from the web. This means that is an independent tool from the live game's operator, and can be used like football VAR by the arbiters.
 
 # Operating System
 
