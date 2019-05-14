@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import os.path, json
 from PyQt5.QtWidgets import QApplication
 from SourceDialogSlots import SourceDialogSlots
-from download import DownloadPgn
+from DownloadPgn import DownloadPgn
 from helpers import get_appData_path
 
 class SourceDialogController():

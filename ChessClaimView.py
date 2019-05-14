@@ -16,8 +16,6 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-
-import platform
 from datetime import datetime
 from PyQt5.QtWidgets import (QMainWindow, QWidget, QTreeView, QPushButton, QDesktopWidget,
 QAbstractItemView, QHBoxLayout, QVBoxLayout, QLabel, QStatusBar, QMessageBox, QAction, QDialog)
@@ -350,7 +348,7 @@ class ChessClaimView(QMainWindow):
                 exitDialog = QMessageBox()
                 exitDialog.setWindowTitle("Warning")
                 exitDialog.setText("Scanning in Progress")
-                exitDialog.setInformativeText("Do you want to exit?")
+                exitDialog.setInformativeText("Do you want to quit?")
                 exitDialog.setIcon(exitDialog.Warning)
                 exitDialog.setStandardButtons(QMessageBox.Yes | QMessageBox.Cancel)
                 exitDialog.setDefaultButton(QMessageBox.Cancel)
