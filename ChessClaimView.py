@@ -202,12 +202,18 @@ class ChessClaimView(QMainWindow):
 
     def notify(self,type,players,move):
         if (platform.system() == "Darwin"):
-            pync.notify(title=type,subtitle=players,
-                        message=move,appIcon=resource_path("logo.png"),
+            pync.notify(title=type,
+                        subtitle=players,
+                        message=move,
+                        appIcon=resource_path("logo.png"),
                         sender="com.brainfriz.chess-claim-tool")
         elif(platform.system() == "Windows"):
-            #add notification for windowsOS
-            pass
+                toaster = ToastNotifier()
+                toaster.show_toast(type,
+                                   players+"\n"+move,
+                                   icon_path=resource_path("logo.ico"),
+                                   duration=5,
+                                   threaded=True)
 
     def remove_from_table(self,index):
         """ Remove element from the claimsTable.
