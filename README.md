@@ -1,4 +1,6 @@
 # Introduction
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2FDedekind125%2Fchess-claim-tool.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2FDedekind125%2Fchess-claim-tool?ref=badge_shield)
+
 
 According to the official FIDE Regulations in some special cases, a game of chess could end in a draw either by a claim of the player or by the intervention of the arbiter.
 These cases are:
@@ -49,3 +51,7 @@ Here is how the GUI looks like (on macOS) while the program is running:
 
 
 
+
+
+## License
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2FDedekind125%2Fchess-claim-tool.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2FDedekind125%2Fchess-claim-tool?ref=badge_large)
