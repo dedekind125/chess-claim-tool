@@ -251,9 +251,11 @@ class ChessClaimView(QMainWindow):
             text = ""
             for index in range(len(validSources)):
                 if (index == len(validSources) - 1):
-                    text = text+validSources[index].get_value()
+                    number = str(index+1)
+                    text = text+number+") "+validSources[index].get_value()
                 else:
-                    text = text+validSources[index].get_value()+"\n"
+                    number = str(index+1)
+                    text = text+number+") "+validSources[index].get_value()+"\n"
             self.sourceLabel.setToolTip(text)
         except TypeError:
             pass
