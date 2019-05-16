@@ -451,7 +451,7 @@ class AboutDialog(QDialog):
         # Create the information labels
         appname = QLabel("Chess Claim Tool")
         appname.setObjectName("appname")
-        version = QLabel("Version 0.1.0")
+        version = QLabel("Version 0.2.0")
         version.setObjectName("version")
         copyright = QLabel("Serntedakis Athanasios 2019 © All Rights Reserved")
         copyright.setObjectName("copyright")
