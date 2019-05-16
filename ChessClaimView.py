@@ -16,12 +16,19 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
+import platform
 from datetime import datetime
 from PyQt5.QtWidgets import (QMainWindow, QWidget, QTreeView, QPushButton, QDesktopWidget,
 QAbstractItemView, QHBoxLayout, QVBoxLayout, QLabel, QStatusBar, QMessageBox, QAction, QDialog)
 from PyQt5.QtGui import QStandardItemModel, QPixmap, QMovie, QStandardItem, QColor
 from PyQt5.QtCore import Qt, QSize
 from helpers import resource_path
+
+# Notification Import
+if (platform.system() == "Darwin"):
+    import pync
+elif(platform.system() == "Windows"):
+    from win10toast import ToastNotifier
 
 class ChessClaimView(QMainWindow):
     """ The main window of the application.
@@ -189,6 +196,24 @@ class ChessClaimView(QMainWindow):
 
         # Always the last row(the bottom of the table) should be visible.
         self.claimsTable.scrollToBottom()
+
+        #Send Notification
+        self.notify(type,players,move)
+
+    def notify(self,type,players,move):
+        if (platform.system() == "Darwin"):
+            pync.notify(title=type,
+                        subtitle=players,
+                        message=move,
+                        appIcon=resource_path("logo.png"),
+                        sender="com.brainfriz.chess-claim-tool")
+        elif(platform.system() == "Windows"):
+                toaster = ToastNotifier()
+                toaster.show_toast(type,
+                                   players+"\n"+move,
+                                   icon_path=resource_path("logo.ico"),
+                                   duration=5,
+                                   threaded=True)
 
     def remove_from_table(self,index):
         """ Remove element from the claimsTable.
