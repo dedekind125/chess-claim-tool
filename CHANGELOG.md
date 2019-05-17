@@ -1,4 +1,7 @@
 # ChangeLog
+## Version 0.2.0
+###Added
+* Notifications
 
 ## Version 0.1.0
 ### Initial Commit
