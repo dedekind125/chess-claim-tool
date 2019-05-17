@@ -35,6 +35,14 @@ pip install pyqt5
 ```
 pip install python-chess
 ```
+* [Windows-10-Toast-Notifications](https://github.com/jithurjacob/Windows-10-Toast-Notifications)
+```
+pip install win10toast
+```
+* [pync](https://github.com/setem/pync)
+```
+pip install pync
+```
 
 # Usage
 The program should start by running the main.py
