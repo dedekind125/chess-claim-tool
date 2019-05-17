@@ -145,14 +145,14 @@ class SourceHBox(QWidget):
         deleteButton.clicked.connect(partial(self.dialog.slots.on_deleteButton_clicked,self))
 
         # Add all the above elements to layout.
-        self.layout = QHBoxLayout()
-        self.layout.addWidget(self.selectSource)
-        self.layout.addWidget(self.sourceValue)
-        self.layout.addWidget(self.chooseButton)
-        self.layout.addWidget(self.statusImage)
-        self.layout.addWidget(deleteButton)
+        layout = QHBoxLayout()
+        layout.addWidget(self.selectSource)
+        layout.addWidget(self.sourceValue)
+        layout.addWidget(self.chooseButton)
+        layout.addWidget(self.statusImage)
+        layout.addWidget(deleteButton)
 
-        self.setLayout(self.layout)
+        self.setLayout(layout)
         self.adjustSize()
 
     def set_value(self,text):
@@ -201,9 +201,7 @@ class SourceHBox(QWidget):
         """ Opens a file explorer for the user to choose a file.
         Trigger: User clicks the "Choose File" button of the Horizontal Box.
         """
-        options = QFileDialog.Options()
-        options |= QFileDialog.DontUseNativeDialog
-        fileName, _ = QFileDialog.getOpenFileName(self,"QFileDialog.getOpenFileName()", "","PGN Files (*.pgn)", options=options)
+        fileName,_= QFileDialog.getOpenFileName(self,"Select File", "","PGN Files (*.pgn)")
         if fileName: self.sourceValue.setText(fileName)
 
 class BottomBox(QWidget):
@@ -230,10 +228,10 @@ class BottomBox(QWidget):
         self.rememberOption.setChecked(1)
 
         # Add all the above elements to layout.
-        self.layout = QHBoxLayout()
-        self.layout.setSpacing(30)
-        self.layout.addWidget(applyButton)
-        self.layout.addWidget(okButton)
-        self.layout.addWidget(self.rememberOption)
+        layout = QHBoxLayout()
+        layout.setSpacing(30)
+        layout.addWidget(applyButton)
+        layout.addWidget(okButton)
+        layout.addWidget(self.rememberOption)
 
-        self.setLayout(self.layout)
+        self.setLayout(layout)

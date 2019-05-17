@@ -38,8 +38,8 @@ app = BUNDLE(exe,
               'NSHighResolutionCapable':True,
               'NSAppleScriptEnabled': False,
               'CFBundleIdentifier': 'com.brainfriz.chess-claim-tool',
-              'CFBundleInfoDictionaryVersion':'0.1',
-              'CFBundleShortVersionString':'0.1.0',
+              'CFBundleInfoDictionaryVersion':'0.2',
+              'CFBundleShortVersionString':'0.2.0',
               'NSHumanReadableCopyright':'© 2019 Serntedakis Athanasios',
               'CFBundleDocumentTypes': [
                     {

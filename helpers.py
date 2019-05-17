@@ -45,4 +45,4 @@ def get_appData_path():
         basePath = os.path.join(os.getenv("HOME"),"Library/Application Support")
     elif(platform.system() == "Windows"):
         basePath = os.getenv('APPDATA')
-    return os.path.join(basePath,"Chess Check Claims")
+    return os.path.join(basePath,"Chess Claim Tool")
