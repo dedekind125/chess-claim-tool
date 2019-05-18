@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 import urllib.request
+import certifi
 
 class DownloadPgn():
     """ Provide the methods to check and download a pgn file from the web
@@ -36,7 +37,7 @@ class DownloadPgn():
         if not(url.endswith(".pgn")):
             return False
         try:
-            urllib.request.urlopen(url,timeout=4)
+            urllib.request.urlopen(url,timeout=4,cafile=certifi.where())
             return True
         except:
             return False
@@ -49,7 +50,7 @@ class DownloadPgn():
             pgn(str): On success, the contents of the pgn file.
         """
         try:
-            response = urllib.request.urlopen(url,timeout=10)
+            response = urllib.request.urlopen(url,timeout=10,cafile=certifi.where())
             pgn = response.read()
             self.set_status("ok")
             return pgn
