@@ -24,17 +24,13 @@ from PyQt5.QtGui import QStandardItemModel, QPixmap, QMovie, QStandardItem, QCol
 from PyQt5.QtCore import Qt, QSize
 from helpers import resource_path
 
-# Notification Import
-if (platform.system() == "Darwin"):
-    import pync
-elif(platform.system() == "Windows"):
-    from win10toast import ToastNotifier
-
 class ChessClaimView(QMainWindow):
     """ The main window of the application.
     Attributes:
         rowCount(int): The number of the row the TreeView Table has.
         iconsSize(int): The recommended size of the icons.
+        mac_notification: Notification for macOS
+        win_notification: Notification for windows OS
     """
     def __init__(self):
         super().__init__()
@@ -45,6 +41,13 @@ class ChessClaimView(QMainWindow):
         self.center()
 
         self.rowCount = 0
+
+        if (platform.system() == "Darwin"):
+            from MacNotification import Notification
+            self.mac_notification = Notification()
+        elif (platform.system() == "Windows"):
+            from win10toast import ToastNotifier
+            self.win_notification = ToastNotifier()
 
     def center(self):
         """ Centers the window on the screen """
@@ -201,15 +204,18 @@ class ChessClaimView(QMainWindow):
         self.notify(type,players,move)
 
     def notify(self,type,players,move):
+        """ Send notification depending on the OS.
+        Args:
+            type: The type of the draw (3 Fold Repetition, 5 Fold Repetition,
+                                        50 Moves Rule, 75 Moves Rule).
+            players: The names of the players.
+            move: With which move the draw is valid.
+        """
         if (platform.system() == "Darwin"):
-            pync.notify(title=type,
-                        subtitle=players,
-                        message=move,
-                        appIcon=resource_path("logo.png"),
-                        sender="com.brainfriz.chess-claim-tool")
+            self.mac_notification.clearNotifications()
+            self.mac_notification.notify(type,players,move)
         elif(platform.system() == "Windows"):
-                toaster = ToastNotifier()
-                toaster.show_toast(type,
+                self.win_notification.show_toast(type,
                                    players+"\n"+move,
                                    icon_path=resource_path("logo.ico"),
                                    duration=5,
