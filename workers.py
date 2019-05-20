@@ -262,7 +262,7 @@ class MakePgn(Thread):
             for filepath in self.filePathList:
                 try:
                     in_file = open(filepath, "rb")
-                    data = data+in_file.read()
+                    data = data+"\n\n".encode("utf-8")+in_file.read()
                     in_file.close()
                 except FileNotFoundError:
                     continue
@@ -279,7 +279,7 @@ class MakePgn(Thread):
         data = bytes()
         for filepath in self.filePathList:
             in_file = open(filepath, "rb")
-            data = data+in_file.read()
+            data = data+"\n\n".encode("utf-8")+in_file.read()
             in_file.close()
 
         file = open(self.filename,"wb")
