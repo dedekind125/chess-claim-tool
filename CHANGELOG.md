@@ -1,4 +1,10 @@
 # ChangeLog
+## Version 0.2.1
+### Fixes
+* macOS Notifications
+* SSL bug with some versions of macOS
+* A minor bug while scanning multiple pgn
+
 ## Version 0.2.0
 ### Added
 * Notifications
