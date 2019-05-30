@@ -39,10 +39,6 @@ pip install python-chess
 ```
 pip install win10toast
 ```
-* [pync](https://github.com/setem/pync)
-```
-pip install pync
-```
 
 # Usage
 The program should start by running the main.py
