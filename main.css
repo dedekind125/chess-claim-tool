@@ -61,3 +61,7 @@ QLabel#appname{
 QLabel#copyright{
   font-size: 10px;
 }
+QTreeView::item:selected{
+  color: #fff;
+  background-color: #006ae9;
+}

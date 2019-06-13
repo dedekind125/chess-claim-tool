@@ -40,8 +40,6 @@ class ChessClaimView(QMainWindow):
         self.setWindowTitle('Chess Claim Tool')
         self.center()
 
-        self.rowCount = 0
-
         if (platform.system() == "Darwin"):
             from MacNotification import Notification
             self.mac_notification = Notification()
@@ -80,7 +78,8 @@ class ChessClaimView(QMainWindow):
         self.claimsTable.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.claimsTable.header().setDefaultAlignment(Qt.AlignCenter)
         self.claimsTable.setSortingEnabled(True)
-        self.claimsTable.doubleClicked.connect(self.open_game)
+        self.claimsTable.setIndentation(0)
+        self.claimsTable.setUniformRowHeights(True)
 
         # Create the Claims Model
         self.claimsTableModel = QStandardItemModel()
@@ -144,12 +143,8 @@ class ChessClaimView(QMainWindow):
         self.setCentralWidget(containerWidget)
         self.setStatusBar(self.statusBar)
 
-    def open_game(self):
-        """ TODO: Double click should open a window to replay the game."""
-        pass
-
     def resize_claimsTable(self):
-        """ Resize the table (if needed) after the insertion of a new element"""
+        """ Resize the table (if needed) after the insertion of a new element. """
         for index in range(0,6):
             self.claimsTable.resizeColumnToContents(index)
 
@@ -172,7 +167,8 @@ class ChessClaimView(QMainWindow):
 
         timestamp = str(datetime.now().strftime('%H:%M:%S'))
         row = []
-        items = [str(self.rowCount+1),timestamp,type,bo_number,players,move]
+        count = str(self.claimsTableModel.rowCount()+1)
+        items = [count,timestamp,type,bo_number,players,move]
 
         """ Convert each item(str) to QStandardItem, make the necessary stylistic
         additions and append it to row."""
@@ -192,7 +188,6 @@ class ChessClaimView(QMainWindow):
             row.append(standardItem)
 
         self.claimsTableModel.appendRow(row)
-        self.rowCount = self.rowCount+1
 
         # After the insertion resize the table
         self.resize_claimsTable()
@@ -238,7 +233,7 @@ class ChessClaimView(QMainWindow):
                                         50 Moves Rule, 75 Moves Rule).
             players: The names of the players.
         """
-        for index in range(self.rowCount):
+        for index in range(self.claimsTableModel.rowCount()):
 
             try:
                 modelType = self.claimsTableModel.item(index,2).text()
@@ -249,22 +244,31 @@ class ChessClaimView(QMainWindow):
 
             if (modelType == type and modelPlayers == players):
                 self.remove_from_table(index)
-                self.rowCount = self.rowCount - 1
+                self.reset_countColumn()
                 break
             elif (type == "5 Fold Repetition" and modelType == "3 Fold Repetition" and modelPlayers == players) :
                 self.remove_from_table(index)
-                self.rowCount = self.rowCount - 1
+                self.reset_countColumn()
                 break
             elif (type == "75 Moves Rule" and modelType == "50 Moves Rule" and modelPlayers == players):
                 self.remove_from_table(index)
-                self.rowCount = self.rowCount - 1
+                self.reset_countColumn()
                 break
 
+    def reset_countColumn(self):
+        """ Re-index the numbers in the first column of Claims Table
+        (the "#" column) after the removal of rows (see remove_rows()).
+        """
+        rowCount = self.claimsTableModel.rowCount()
+        for index in range(rowCount):
+            standardItem = QStandardItem(str(index+1))
+            standardItem.setTextAlignment(Qt.AlignCenter)
+            self.claimsTableModel.setItem(index,0,standardItem)
+
     def clear_table(self):
-        """ Clear all the elements off the Claims Table and resets the rowCount. """
-        for index in range(self.rowCount):
+        """ Clear all the elements off the Claims Table. """
+        for index in range(self.claimsTableModel.rowCount()):
             self.claimsTableModel.removeRow(0)
-        self.rowCount = 0
 
     def set_sources_status(self,status,validSources=None):
         """ Adds the sourcess in the statusBar.
