@@ -130,6 +130,8 @@ class SourceDialogSlots():
             if filepath not in self.filepathList:
                 self.filepathList.append(filepath)
 
+        self.view.enable_okButton()
+
     def on_exit_thread(self):
         """ Function called by Thread to perform the operations of the on_okButton_clicked."""
 

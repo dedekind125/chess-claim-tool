@@ -105,6 +105,12 @@ class AddSourceDialog(QDialog):
     def get_remember_option(self):
         return self.bottomBox.rememberOption
 
+    def enable_okButton(self):
+        self.bottomBox.okButton.setEnabled(True)
+
+    def disable_okButton(self):
+        self.bottomBox.okButton.setEnabled(False)
+
 class SourceHBox(QWidget):
     """ Provide a Horizontal Box with a Combo Box a Line Edit for user input,
     a Choose File Button in case of the Local File Option, a Status Image
@@ -168,6 +174,7 @@ class SourceHBox(QWidget):
         return self.selectSource.currentIndex()
 
     def line_edit_change(self):
+        self.dialog.disable_okButton()
         self.statusImage.clear()
 
     def select_change(self,index):
@@ -176,6 +183,7 @@ class SourceHBox(QWidget):
             index: The index of the option. 0: Web Url, 1: Local File
         """
         self.statusImage.clear()
+        self.dialog.disable_okButton()
         if(index == 0): # Web download option
             self.chooseButton.setHidden(True)
             self.sourceValue.setText("")
@@ -216,11 +224,13 @@ class BottomBox(QWidget):
 
         # Create the Apply and Ok Buttons.
         applyButton = QPushButton("Apply")
-        okButton = QPushButton("ΟΚ")
+        self.okButton = QPushButton("ΟΚ")
         applyButton.setObjectName("apply")
-        okButton.setObjectName("ok")
+        self.okButton.setObjectName("ok")
         applyButton.clicked.connect(self.dialog.slots.on_applyButton_clicked)
-        okButton.clicked.connect(self.dialog.slots.on_okButton_clicked)
+        self.okButton.clicked.connect(self.dialog.slots.on_okButton_clicked)
+
+        self.okButton.setEnabled(False)
 
         # Create the Check Box
         self.rememberOption = QCheckBox("Remember Sources")
@@ -231,7 +241,7 @@ class BottomBox(QWidget):
         layout = QHBoxLayout()
         layout.setSpacing(30)
         layout.addWidget(applyButton)
-        layout.addWidget(okButton)
+        layout.addWidget(self.okButton)
         layout.addWidget(self.rememberOption)
 
         self.setLayout(layout)
