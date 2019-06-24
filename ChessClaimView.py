@@ -100,22 +100,17 @@ class ChessClaimView(QMainWindow):
         self.pixmapError = QPixmap(resource_path("error_icon.png"))
 
         self.sourceLabel = QLabel()
-        self.sourceLabel.setObjectName("source-label")
         self.sourceImage = QLabel()
         self.sourceImage.setObjectName("source-image")
         self.downloadLabel = QLabel()
-        self.downloadLabel.setObjectName("download-label")
         self.downloadImage = QLabel()
         self.downloadImage.setObjectName("download-image")
-        self.scanningLabel = QLabel()
-        self.scanningLabel.setObjectName("scanning")
-        self.spinnerLabel = QLabel()
-        self.spinnerLabel.setVisible(False)
-        self.spinnerLabel.setObjectName("spinner")
+        self.scanLabel = QLabel()
+        self.scanImage = QLabel()
+        self.scanImage.setObjectName("scan-image")
 
         self.spinner = QMovie(resource_path("spinner.gif"))
         self.spinner.setScaledSize(QSize(self.iconsSize, self.iconsSize))
-        self.spinnerLabel.setMovie(self.spinner)
         self.spinner.start()
 
         self.statusBar = QStatusBar()
@@ -125,8 +120,8 @@ class ChessClaimView(QMainWindow):
         self.statusBar.addWidget(self.sourceImage)
         self.statusBar.addWidget(self.downloadLabel)
         self.statusBar.addWidget(self.downloadImage)
-        self.statusBar.addWidget(self.scanningLabel)
-        self.statusBar.addWidget(self.spinnerLabel)
+        self.statusBar.addWidget(self.scanLabel)
+        self.statusBar.addWidget(self.scanImage)
         self.statusBar.addPermanentWidget(sourcesButton)
         self.statusBar.setContentsMargins(10,5,9,5)
 
@@ -323,18 +318,18 @@ class ChessClaimView(QMainWindow):
         Args:
             status(str): The status of the scan process.
                 "active": The scan process is active.
-                "error": The scan process waits for a new file.
+                "wait": The scan process waits for a new file.
                 "stop": The scan process stopped.
         """
+        timestamp = str(datetime.now().strftime('%H:%M:%S'))
+        self.scanLabel.setText(timestamp+" Scan:")
         if (status == "wait"):
-            self.scanningLabel.setText("Scan: Waiting")
-            self.spinnerLabel.setVisible(False)
+            self.scanImage.setPixmap(self.pixmapCheck.scaled(self.iconsSize,self.iconsSize,transformMode=Qt.SmoothTransformation))
         elif (status == "active"):
-            self.scanningLabel.setText("Scanning...")
-            self.spinnerLabel.setVisible(True)
+            self.scanImage.setMovie(self.spinner)
         elif (status == "stop"):
-            self.scanningLabel.clear()
-            self.spinnerLabel.setVisible(False)
+            self.scanLabel.clear()
+            self.scanImage.setVisible(False)
 
     def change_scanButton_text(self,status):
         """ Changes the text of the scanButton depending on the status of the application.
@@ -363,15 +358,15 @@ class ChessClaimView(QMainWindow):
         """ Show download and scan status messages - if they were previously
         hidden (by disable_statusBar) - from the statusBar."""
         self.downloadLabel.setVisible(True)
-        self.scanningLabel.setVisible(True)
+        self.scanLabel.setVisible(True)
         self.downloadImage.setVisible(True)
 
     def disable_statusBar(self):
         """ Hide download and scan status messages from the statusBar. """
         self.downloadLabel.setVisible(False)
         self.downloadImage.setVisible(False)
-        self.scanningLabel.setVisible(False)
-        self.spinnerLabel.setVisible(False)
+        self.scanLabel.setVisible(False)
+        self.scanImage.setVisible(False)
 
     def closeEvent(self,event):
         """ Reimplement the close button

@@ -171,8 +171,8 @@ class Scan(QThread):
                     entries = self.model.get_entries()
 
                 last_size = size_of_pgn
+                self.statusSignal.emit("wait")
 
-            self.statusSignal.emit("wait")
             time.sleep(4)
 
     def stop(self):

@@ -45,7 +45,7 @@ QPushButton#sources{
 QStatusBar{
   border-top: 1px solid #DCDCDC;
 }
-QLabel#download-image,#source-image,#spinner{
+QLabel#download-image,#source-image,#scan-image{
     margin-right: 10px;
 }
 QHeaderView{
