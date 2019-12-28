@@ -186,12 +186,12 @@ class ChessClaimSlots:
 
         trigger: By the enableSignal(pyqtSignal)
         """
-        self.view.enable_buttons()
-        self.view.enable_statusBar()
-
         self.view.change_scanButton_text("stop")
         self.update_statusBar_download("stop")
         self.update_statusBar_scan("stop")
+        
+        self.view.enable_buttons()
+        self.view.enable_statusBar()
 
     def update_statusBar_sources(self):
         validSources = self.dialog.get_validSources()

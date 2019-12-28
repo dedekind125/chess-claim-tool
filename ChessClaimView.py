@@ -346,10 +346,11 @@ class ChessClaimView(QMainWindow):
                                     transformMode=Qt.SmoothTransformation)
                                 )
         elif (status == "active"):
+            self.scanImage.clear()
             self.scanImage.setMovie(self.spinner)
         elif (status == "stop"):
             self.scanLabel.clear()
-            self.scanImage.setVisible(False)
+            self.scanImage.clear()
 
     def change_scanButton_text(self,status):
         """ Changes the text of the scanButton depending on the status of the application.
@@ -380,6 +381,7 @@ class ChessClaimView(QMainWindow):
         self.downloadLabel.setVisible(True)
         self.scanLabel.setVisible(True)
         self.downloadImage.setVisible(True)
+        self.scanImage.setVisible(True)
 
     def disable_statusBar(self):
         """ Hide download and scan status messages from the statusBar. """
