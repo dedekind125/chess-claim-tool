@@ -203,7 +203,7 @@ class ChessClaimSlots:
     """ Functions to update the GUI. Triggered by pyqt Signals."""
 
     def update_claimsTable(self,entry):
-        self.view.add_to_table(entry[0],entry[1],entry[2],entry[3])
+        self.view.add_to_table(entry)
 
     def update_statusBar_download(self,status):
         self.view.set_download_status(status)

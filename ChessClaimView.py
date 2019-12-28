@@ -147,23 +147,24 @@ class ChessClaimView(QMainWindow):
         """ Connect the Slots """
         self.slots = slots
 
-    def add_to_table(self,type,bo_number,players,move):
+    def add_to_table(self,entry):
         """ Add new row to the claimsTable
         Args:
-            type: The type of the draw (3 Fold Repetition, 5 Fold Repetition,
+            claimType: The type of the draw (3 Fold Repetition, 5 Fold Repetition,
                                         50 Moves Rule, 75 Moves Rule).
             bo_number: The number of the boards, if this information is available.
             players: The name of the players.
             move: With which move the draw is valid.
         """
+        claimType,bo_number,players,move = entry[:4]
 
         # Before insertion, remove rows as descripted in the remove_rows function
-        self.remove_rows(type,players)
+        self.remove_rows(claimType,players)
 
         timestamp = str(datetime.now().strftime('%H:%M:%S'))
         row = []
         count = str(self.claimsTableModel.rowCount()+1)
-        items = [count,timestamp,type,bo_number,players,move]
+        items = [count,timestamp,claimType,bo_number,players,move]
 
         """ Convert each item(str) to QStandardItem, make the necessary stylistic
         additions and append it to row."""
@@ -191,21 +192,21 @@ class ChessClaimView(QMainWindow):
         self.claimsTable.scrollToBottom()
 
         #Send Notification
-        self.notify(type,players,move)
+        self.notify(claimType,players,move)
 
-    def notify(self,type,players,move):
+    def notify(self,claimType,players,move):
         """ Send notification depending on the OS.
         Args:
-            type: The type of the draw (3 Fold Repetition, 5 Fold Repetition,
+            claimType: The type of the draw (3 Fold Repetition, 5 Fold Repetition,
                                         50 Moves Rule, 75 Moves Rule).
             players: The names of the players.
             move: With which move the draw is valid.
         """
         if (platform.system() == "Darwin"):
             self.mac_notification.clearNotifications()
-            self.mac_notification.notify(type,players,move)
+            self.mac_notification.notify(claimType,players,move)
         elif(platform.system() == "Windows"):
-                self.win_notification.show_toast(type,
+                self.win_notification.show_toast(claimType,
                                    players+"\n"+move,
                                    icon_path=resource_path("logo.ico"),
                                    duration=5,
@@ -218,13 +219,13 @@ class ChessClaimView(QMainWindow):
         """
         self.claimsTableModel.removeRow(index)
 
-    def remove_rows(self,type,players):
+    def remove_rows(self,claimType,players):
         """ Removes a existing row from the Claims Table when same players made
         the same type of draw with a new move - or they made 5 Fold Repetition
         over the 3 Fold or 75 Moves Rule over 50 moves Rule.
 
         Args:
-            type: The type of the draw (3 Fold Repetition, 5 Fold Repetition,
+            claimType: The type of the draw (3 Fold Repetition, 5 Fold Repetition,
                                         50 Moves Rule, 75 Moves Rule).
             players: The names of the players.
         """
@@ -237,15 +238,19 @@ class ChessClaimView(QMainWindow):
                 modelType = ""
                 modelPlayers = ""
 
-            if (modelType == type and modelPlayers == players):
+            if (modelType == claimType and modelPlayers == players):
                 self.remove_from_table(index)
                 self.reset_countColumn()
                 break
-            elif (type == "5 Fold Repetition" and modelType == "3 Fold Repetition" and modelPlayers == players) :
+            elif (claimType == "5 Fold Repetition" and \
+                modelType == "3 Fold Repetition"   and \
+                modelPlayers == players):
                 self.remove_from_table(index)
                 self.reset_countColumn()
                 break
-            elif (type == "75 Moves Rule" and modelType == "50 Moves Rule" and modelPlayers == players):
+            elif (claimType == "75 Moves Rule" and \
+                  modelType == "50 Moves Rule" and \
+                  modelPlayers == players):
                 self.remove_from_table(index)
                 self.reset_countColumn()
                 break
@@ -291,9 +296,15 @@ class ChessClaimView(QMainWindow):
             pass
 
         if (status == "ok"):
-            self.sourceImage.setPixmap(self.pixmapCheck.scaled(self.iconsSize,self.iconsSize,transformMode=Qt.SmoothTransformation))
+            self.sourceImage.setPixmap(self.pixmapCheck.scaled
+                                        (self.iconsSize,self.iconsSize,
+                                        transformMode=Qt.SmoothTransformation)
+                                    )
         else:
-            self.sourceImage.setPixmap(self.pixmapError.scaled(self.iconsSize,self.iconsSize,transformMode=Qt.SmoothTransformation))
+            self.sourceImage.setPixmap(self.pixmapError.scaled
+                                        (self.iconsSize,self.iconsSize,
+                                        transformMode=Qt.SmoothTransformation)
+                                    )
 
     def set_download_status(self,status):
         """ Adds download status in the statusBar.
@@ -306,9 +317,15 @@ class ChessClaimView(QMainWindow):
         timestamp = str(datetime.now().strftime('%H:%M:%S'))
         self.downloadLabel.setText(timestamp+" Download:")
         if (status == "ok"):
-            self.downloadImage.setPixmap(self.pixmapCheck.scaled(self.iconsSize,self.iconsSize,transformMode=Qt.SmoothTransformation))
+            self.downloadImage.setPixmap(self.pixmapCheck.scaled
+                                        (self.iconsSize,self.iconsSize,
+                                        transformMode=Qt.SmoothTransformation)
+                                    )
         elif (status == "error"):
-            self.downloadImage.setPixmap(self.pixmapError.scaled(self.iconsSize,self.iconsSize,transformMode=Qt.SmoothTransformation))
+            self.downloadImage.setPixmap(self.pixmapError.scaled 
+                                        (self.iconsSize,self.iconsSize,
+                                        transformMode=Qt.SmoothTransformation)
+                                    )
         elif (status == "stop"):
             self.downloadImage.clear()
             self.downloadLabel.clear()
@@ -324,7 +341,10 @@ class ChessClaimView(QMainWindow):
         timestamp = str(datetime.now().strftime('%H:%M:%S'))
         self.scanLabel.setText(timestamp+" Scan:")
         if (status == "wait"):
-            self.scanImage.setPixmap(self.pixmapCheck.scaled(self.iconsSize,self.iconsSize,transformMode=Qt.SmoothTransformation))
+            self.scanImage.setPixmap(self.pixmapCheck.scaled
+                                    (self.iconsSize,self.iconsSize,
+                                    transformMode=Qt.SmoothTransformation)
+                                )
         elif (status == "active"):
             self.scanImage.setMovie(self.spinner)
         elif (status == "stop"):
