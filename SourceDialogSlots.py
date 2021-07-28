@@ -59,6 +59,8 @@ class SourceDialogSlots():
         self.view.sources.remove(sourceHBox)
         self.view.sourcesCounter = self.view.sourcesCounter-1
 
+        self.on_applyButton_clicked()
+
         # Remove Source Horizontal Box from View
         self.view.layout.removeWidget(sourceHBox)
         sourceHBox.deleteLater()
@@ -126,7 +128,7 @@ class SourceDialogSlots():
 
         # Add the valid urls to the filepathList
         for index in range(0,len(self.downloadList)):
-            filepath = os.path.join(self.appPath,"games"+str(index)+".pgn")
+            filepath = os.path.join(self.appPath,"games{index}.pgn".format(index = str(index)))
             if filepath not in self.filepathList:
                 self.filepathList.append(filepath)
 
