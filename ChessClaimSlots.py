@@ -22,8 +22,8 @@ from threading import Lock
 from PyQt5.QtCore import QThreadPool
 from SourceDialogController import SourceDialogController
 from SourceDialogView import AddSourceDialog
-from workers import DownloadList, MakePgn, Scan, Stop
-from helpers import get_appData_path
+from workers import DownloadGames, MakePgn, Scan, Stop
+from helpers import get_appdata_path
 
 class ChessClaimSlots:
     def __init__(self,model,view):
@@ -80,7 +80,7 @@ class ChessClaimSlots:
         clicked before. So if the user click it again nothing should happen."""
 
         try:
-            if (self.scanWorker.isRunning): return
+            if (self.scanWorker.is_running): return
         except:
             pass
 
@@ -90,7 +90,7 @@ class ChessClaimSlots:
         if (self.dialogFirstTime):
             self.view.load_warning()
             return
-        filepathList = self.dialog.get_filepathList()
+        filepathList = self.dialog.get_filepath_list()
         if not filepathList:
             self.view.load_warning()
             return
@@ -102,10 +102,10 @@ class ChessClaimSlots:
         therad(downloadWorker) to continuously download the web source(s). """
 
         self.hasDownloadWorker = False
-        downloadList = self.dialog.get_downloadList()
+        downloadList = self.dialog.get_download_list()
         if downloadList:
-            self.downloadWorker = DownloadList(downloadList,True)
-            self.downloadWorker.statusSignal.connect(self.update_statusBar_download)
+            self.downloadWorker = DownloadGames(downloadList, True)
+            self.downloadWorker.status_signal.connect(self.update_statusBar_download)
             self.hasDownloadWorker = True
             self.downloadWorker.start()
 
@@ -123,7 +123,7 @@ class ChessClaimSlots:
         self.makePgnWorker = MakePgn(filepathList,True,fileLock)
         self.makePgnWorker.start()
 
-        appPath = get_appData_path()
+        appPath = get_appdata_path()
         filename = os.path.join(appPath,"games.pgn")
 
         """ Create a thread(scanWorker) to scan the combined pgn using the Model.
@@ -194,7 +194,7 @@ class ChessClaimSlots:
         self.view.enable_statusBar()
 
     def update_statusBar_sources(self):
-        validSources = self.dialog.get_validSources()
+        validSources = self.dialog.get_valid_sources()
         if (len(validSources) == 0):
             self.view.set_sources_status("error")
         else:

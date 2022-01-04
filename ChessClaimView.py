@@ -54,7 +54,7 @@ class ChessClaimView(QMainWindow):
         self.move((screen.width()-size.width())/2,
             (screen.height()-size.height())/2)
 
-    def set_GUI(self):
+    def set_gui(self):
         """ Initialize GUI components. """
 
         # Create the Menu
@@ -322,7 +322,7 @@ class ChessClaimView(QMainWindow):
                                         transformMode=Qt.SmoothTransformation)
                                     )
         elif (status == "error"):
-            self.downloadImage.setPixmap(self.pixmapError.scaled 
+            self.downloadImage.setPixmap(self.pixmapError.scaled
                                         (self.iconsSize,self.iconsSize,
                                         transformMode=Qt.SmoothTransformation)
                                     )
@@ -398,7 +398,7 @@ class ChessClaimView(QMainWindow):
             event: The exit QEvent.
         """
         try:
-            if (self.slots.scanWorker.isRunning):
+            if (self.slots.scanWorker.is_running):
                 exitDialog = QMessageBox()
                 exitDialog.setWindowTitle("Warning")
                 exitDialog.setText("Scanning in Progress")

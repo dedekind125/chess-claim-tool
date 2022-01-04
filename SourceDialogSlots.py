@@ -1,7 +1,7 @@
 """
 Chess Claim Tool: SourceDialogSlots
 
-Copyright (C) 2019 Serntedakis Athanasios <thanasis@brainfriz.com>
+Copyright (C) 2022 Serntedakis Athanasios <thanserd@hotmail.com>
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -17,148 +17,147 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-import os.path, json, time
-from threading import Thread
+import os.path
+import json
+from threading import Thread, Lock
 from PyQt5.QtCore import QThreadPool
-from workers import CheckDownload, DownloadList, MakePgn
-from helpers import get_appData_path
 
-class SourceDialogSlots():
+from SourceDialogView import SourceHBox
+from workers import CheckDownload, DownloadGames, MakePgn
+from helpers import get_appdata_path, Status
+
+
+class SourceDialogSlots:
     """ Handles user interaction with the GUI of the dialog. Each function
     is called when a specific action is performed by the user, to fulfill
     the request that corresponds to that action.
 
     Attributes:
-        model: Object of the Download Class.
         view:  The view of the Source Dialog.
-        appPath(str): The path where the application will store & fetch data.
-        filepathList(list of str): A list that contains all the files path(or url) which are valid.
-        downloadList(list of str): A list that contains all the urls which are valid.
-        validSources(list of SourceHBox): A list that contains all the sources which are valid.
+        app_path(str): The path where the application will store & fetch data.
+        filepaths(list[str]): A list that contains local files paths (from local and url sources) which are valid.
+        downloads(dict): A dictionary containing the mappings of urls to local filepath that are valid.
     """
-    def __init__(self,model,view):
+
+    def __init__(self, view):
         super().__init__()
-        self.model = model
         self.view = view
-        self.appPath = get_appData_path()
 
+        self.app_path = get_appdata_path()
         self.threadPool = QThreadPool()
-        self.filepathList = []
-        self.downloadList = []
-        self.validSources = []
+        self.filepaths = []
+        self.downloads = dict()
+        self.apply_mutex_lock = Lock()
 
-    def on_deleteButton_clicked(self,sourceHBox):
+    def on_delete_button_clicked(self, source_hbox) -> None:
         """ Removes a source.
         Args:
-            sourceHBox: The source to be deleted.
+            source_hbox: The source to be deleted.
 
         Trigger: User clicks the "Delete" Button(Trash Icon) on the Source Dialog.
         """
+        self.apply_mutex_lock.acquire()
+        self.remove_hbox_refs(source_hbox)
+        self.view.remove_hbox(source_hbox)
+        self.apply_mutex_lock.release()
 
-        # Remove sourceHBox from the sourcesList
-        self.view.sources.remove(sourceHBox)
-        self.view.sourcesCounter = self.view.sourcesCounter-1
+    def remove_hbox_refs(self, hbox: SourceHBox) -> None:
+        """ Removes the entries (values) of the target sourceHbox from the downloads and filepaths structures
+        Args:
+            hbox: The SourceHbox for which the values are removed.
+        """
+        value = hbox.get_value()
+        if hbox.has_url() and value in self.downloads:
+            filepath = self.downloads[value]
+            self.filepaths.remove(filepath)
+            del self.downloads[value]
+        elif hbox.has_local() and value in self.filepaths:
+            self.filepaths.remove(value)
 
-        self.on_applyButton_clicked()
-
-        # Remove Source Horizontal Box from View
-        self.view.layout.removeWidget(sourceHBox)
-        sourceHBox.deleteLater()
-        sourceHBox = None
-
-        # Fix GUI after the removal of the sourceHBox
-        self.view.adjustSize()
-
-    def on_applyButton_clicked(self):
-        """ Checks validity of all of the sources. Creates all the
+    def on_apply_button_clicked(self) -> None:
+        """ Checks validity of all sources. Creates all the
         list(filepathList,downloadList,validSources) and sets the status of each source.
 
         Trigger: User clicks the "Apply" Button on the Source Dialog.
         """
+        self.apply_mutex_lock.acquire()
 
-        #Empty Lists
-        self.filepathList = []
-        self.downloadList = []
-        self.validSources = []
+        self.filepaths = []
+        self.downloads = dict()
 
         # Create a Thread to complete the operations.
-        applyThread = Thread(target=self.apply_thread)
-        applyThread.daemon = True
-        applyThread.start()
+        apply_thread = Thread(target=self.on_apply_thread)
+        apply_thread.daemon = True
+        apply_thread.start()
 
-    def on_okButton_clicked(self):
-        """ Closes the Source Dialog and performs all the necessary operations depending
+    def on_ok_button_clicked(self) -> None:
+        """ Closes the Source Dialog and performs all the necessary operations depending on
         the user input. These operations are:
             1) Download the pgn files, if any
             2) Make the games.pgn from all the sources, if there are valid sources.
-            3) If the rememberOption is checked save the valid sources to the JSON file.
 
         Trigger: User clicks the "OK" Button of the Source Dialog.
         """
 
         # Create a Thread to complete the operations.
-        exitThread = Thread(target=self.on_exit_thread)
-        exitThread.daemon = True
-        exitThread.start()
+        exit_thread = Thread(target=self.on_exit_thread)
+        exit_thread.daemon = True
+        exit_thread.start()
 
         # Close the Dialog
         self.view.accept()
         self.view.close()
 
-    def apply_thread(self):
+    def on_apply_thread(self) -> None:
         """ Function called by Thread to perform the operations of the on_applyButton_clicked."""
-
-        # Loop to check the validity of all the sources.
-        for source in self.view.sources:
-            if (source.get_source_index() == 0): # Web Download Option
-                checkDownloadWorker = CheckDownload(self,source)
-                self.threadPool.start(checkDownloadWorker)
-            else: # Local File Option
-                filepath = source.get_value()
+        download_id = 0
+        for source_hbox in self.view.sources:
+            if source_hbox.has_url():
+                self.threadPool.start(CheckDownload(self, source_hbox, download_id))
+                download_id += 1
+            elif source_hbox.has_local():
+                filepath = source_hbox.get_value()
                 if os.path.exists(filepath):
-                    source.set_status("ok")
-                    if filepath not in self.filepathList:
-                        self.filepathList.append(filepath)
-                        self.validSources.append(source)
+                    source_hbox.set_status(Status.ok)
+                    if filepath not in self.filepaths:
+                        self.filepaths.append(filepath)
                 else:
-                    source.set_status("error")
+                    source_hbox.set_status(Status.error)
 
-        # Wait until all the sources are checked.
         self.threadPool.waitForDone()
+        self.apply_mutex_lock.release()
+        self.view.enable_ok_button()
 
-        # Add the valid urls to the filepathList
-        for index in range(0,len(self.downloadList)):
-            filepath = os.path.join(self.appPath,"games{index}.pgn".format(index = str(index)))
-            if filepath not in self.filepathList:
-                self.filepathList.append(filepath)
-
-        self.view.enable_okButton()
-
-    def on_exit_thread(self):
+    def on_exit_thread(self) -> None:
         """ Function called by Thread to perform the operations of the on_okButton_clicked."""
 
         # Download the pgn files
-        downloadListWorker = DownloadList(self.downloadList,False)
-        downloadListWorker.start()
-        downloadListWorker.wait()
+        download_list_worker = DownloadGames(self.downloads)
+        download_list_worker.start()
+        download_list_worker.wait()
 
         #  Make the games.pgn
-        makePgnWorker = MakePgn(self.filepathList,False)
-        makePgnWorker.start()
+        make_pgn_worker = MakePgn(self.filepaths)
+        make_pgn_worker.start()
+        make_pgn_worker.join()
 
-        # If the rememberOption is checked save the valid sources to the JSON file.
-        rememberOption = self.view.get_remember_option()
-        if (rememberOption.isChecked()):
-            self.save_sources()
-        else:
-            os.remove(os.path.join(self.appPath,'sources.json'))
+        self.save_sources()
 
-    def save_sources(self):
+    def save_sources(self) -> None:
         """ Saves the valid sources to the JSON file """
-        data = []
-        for source in self.validSources:
-            data.append({"option":source.get_source_index(),"value":source.get_value()})
+        data = [{"option": source.get_source_index, "value": source.get_value()} for source in self.view.sources]
+        with open(os.path.join(self.app_path, 'sources.json'), 'w') as file:
+            json.dump(data, file, indent=4)
 
-        file = open(os.path.join(self.appPath,'sources.json'), 'w')
-        json.dump(data,file,indent=4)
-        file.close()
+    def add_valid_url(self, url: str, download_id: int) -> None:
+        """ Adds an already valid url into the downloads and filepath structures
+        Args:
+            url: The valid url to be added
+            download_id: A unique id that will be used to map the url to the local downloaded file.
+        """
+        filepath = os.path.join(self.app_path, f"games{download_id}.pgn")
+        if url not in self.downloads:
+            self.downloads[url] = filepath
+
+        if filepath not in self.filepaths:
+            self.filepaths.append(filepath)

@@ -18,47 +18,31 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 import urllib.request
+from urllib.error import HTTPError, URLError
 import certifi
 
-class DownloadPgn():
-    """ Provide the methods to check and download a pgn file from the web
-    Attributes:
-        status(str): The status of the download.
-                     "ok": The file downloaded successfully.
-                     "error": The download failed.
+
+def check_download(url: str, timeout=4) -> bool:
+    """ Checks if the url points to an existing pgn file.
+    Args:
+        timeout:
+        url(str): The location of the file to check.
+    Returns:
+        True if successful, False otherwise.
     """
-    def check_download(self,url):
-        """ Checks if the url points to an existing pgn file.
-        Args:
-            url(str): The location of the file to check.
-        Returns:
-            bool: True if successful, False otherwise.
-        """
-        if not(url.endswith(".pgn")):
-            return False
-        try:
-            urllib.request.urlopen(url,timeout=4,cafile=certifi.where())
-            return True
-        except:
-            return False
+    if not (url.endswith(".pgn")):
+        return False
 
-    def download(self,url):
-        """ Downloads the pgn and sets the status accordingly.
-        Args:
-            url(str): The location of the pgn file.
-        Returns:
-            pgn(str): On success, the contents of the pgn file.
-        """
-        try:
-            response = urllib.request.urlopen(url,timeout=10,cafile=certifi.where())
-            pgn = response.read()
-            self.set_status("ok")
-            return pgn
-        except:
-            self.set_status("error")
+    try:
+        ret_code = urllib.request.urlopen(url, timeout=timeout, cafile=certifi.where()).getcode()
+    except (HTTPError, URLError, ValueError):
+        return False
+    return ret_code == 200
 
-    def set_status(self,status):
-        self.status = status
 
-    def get_status(self):
-        return self.status
+def download_pgn(url: str, timeout=10) -> bytes:
+    try:
+        response = urllib.request.urlopen(url, timeout=timeout, cafile=certifi.where())
+        return response.read()
+    except (HTTPError, URLError):
+        return bytes()

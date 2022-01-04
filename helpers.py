@@ -1,7 +1,7 @@
 """
 Chess Claim Tool: helpers
 
-Copyright (C) 2019 Serntedakis Athanasios <thanasis@brainfriz.com>
+Copyright (C) 2022 Serntedakis Athanasios <thanserd@hotmail.com>
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -16,33 +16,40 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
+import enum
+import os.path
+import platform
+import sys
 
-import os.path, platform, sys
 
-def resource_path(relative_path):
+def resource_path(relative_path: str) -> str:
     """ Get absolute path to a resource, works for running the program from the
     terminal and for PyInstaller.
 
     Args:
         relative_path(str): The relative path of a resource.
     """
-    try:
+    if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
         base_path = sys._MEIPASS
-    except Exception:
+    else:
         if relative_path.endswith(".css"):
             base_path = os.path.abspath(".")
         else:
-            base_path = os.path.join(os.path.abspath("."),"icons")
+            base_path = os.path.join(os.path.abspath("."), "icons")
 
     return os.path.join(base_path, relative_path)
 
-def get_appData_path():
-    """Get the right directories for the different OS in which the app will store data
-    Todo:
-        * Add Linux Support
-    """
-    if (platform.system() == "Darwin"):
-        basePath = os.path.join(os.getenv("HOME"),"Library/Application Support")
-    elif(platform.system() == "Windows"):
-        basePath = os.getenv('APPDATA')
-    return os.path.join(basePath,"Chess Claim Tool")
+
+def get_appdata_path() -> str:
+    """Get the right directories for the different OS in which the app will store data """
+    if platform.system() == "Darwin":
+        base_path = os.path.join(os.getenv("HOME"), "Library/Application Support")
+    elif platform.system() == "Windows":
+        base_path = os.getenv('APPDATA')
+    return os.path.join(base_path, "Chess Claim Tool")
+
+
+class Status(enum.Enum):
+    ok = 1
+    error = 2
+    stop = 3

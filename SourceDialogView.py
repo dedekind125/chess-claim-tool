@@ -1,7 +1,7 @@
 """
 Chess Claim Tool: SourceDialogView
 
-Copyright (C) 2019 Serntedakis Athanasios <thanasis@brainfriz.com>
+Copyright (C) 2022 Serntedakis Athanasios <thanserd@hotmail.com>
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -17,99 +17,100 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-import platform
-from PyQt5.QtWidgets import (QDialog, QWidget, QComboBox, QLineEdit, QPushButton,
-                            QLabel, QHBoxLayout, QCheckBox, QVBoxLayout, QFileDialog)
+from functools import partial
+
 from PyQt5.QtCore import Qt, QSize
 from PyQt5.QtGui import QIcon, QPixmap
-from functools import partial
-from helpers import resource_path
+from PyQt5.QtWidgets import (QDialog, QWidget, QComboBox, QLineEdit, QPushButton,
+                             QLabel, QHBoxLayout, QVBoxLayout, QFileDialog)
+
+from helpers import resource_path, Status
+
 
 class AddSourceDialog(QDialog):
     """ The dialog's GUI.
     Attributes:
         sources(list of SourceHBox): A list of all the sources
-        sourcesCounter(int): The number of the sources in the dialog.
+        sources_cnt(int): The number of the sources in the dialog.
     """
+    ICON_SIZE = 20
+    __slots__ = ['slots', 'layout', 'bottomBox', 'sources', 'source_cnt']
+
     def __init__(self):
         super().__init__()
         self.setModal(True)
         self.setMinimumWidth(420)
         self.resize(420, 100)
-        self.iconsSize = 20
         self.setWindowTitle("PGN Sources")
 
-        """ Removes the "?" from the dialog (visible at Windows OS) """
         self.setWindowFlags(self.windowFlags() ^ Qt.WindowContextHelpButtonHint)
 
+        self.slots = None
+        self.layout = None
+        self.bottomBox = None
         self.sources = []
-        self.sourcesCounter = 0
+        self.sources_cnt = 0
 
-    def set_GUI(self):
+    def set_gui(self) -> None:
         """ Initialize GUI components. """
-
-        # Create the first Horizontal Source Box.
-        self.sourceHBox = SourceHBox(self)
-        self.sources.append(self.sourceHBox)
-        self.sourcesCounter = self.sourcesCounter+1
 
         # Create the Apply & Ok Button Box.
         self.bottomBox = BottomBox(self)
 
         # Create the Add New Source Icon.
-        addsourceButton = QPushButton("")
-        addsourceButton.setIcon(QIcon(resource_path("add_icon.png")))
-        addsourceButton.setIconSize(QSize(self.iconsSize+4,self.iconsSize+4))
-        addsourceButton.setObjectName('AddSource')
-        addsourceButton.clicked.connect(self.on_addsourceButton_clicked)
+        add_source_button = QPushButton("")
+        add_source_button.setIcon(QIcon(resource_path("add_icon.png")))
+        add_source_button.setIconSize(QSize(self.ICON_SIZE + 4, self.ICON_SIZE + 4))
+        add_source_button.setObjectName('AddSource')
+        add_source_button.clicked.connect(self.on_add_source_button_clicked)
 
         # Add all the above elements to layout.
         self.layout = QVBoxLayout()
-        self.layout.addWidget(self.sourceHBox)
-        self.layout.addWidget(addsourceButton,1,Qt.AlignRight)
+        self.layout.addWidget(add_source_button, 1, Qt.AlignRight)
         self.layout.addWidget(self.bottomBox)
         self.setLayout(self.layout)
         self.adjustSize()
 
-    def on_addsourceButton_clicked(self):
+    def on_add_source_button_clicked(self) -> None:
         """Adds a new Horizontal Source Box below the existing ones.
         Trigger:
             User clicks the "+" button of the dialog.
         """
-        self.sourcesCounter = self.sourcesCounter+1
-        sourceHBox = SourceHBox(self)
-        self.sources.append(sourceHBox)
-        self.layout.insertWidget(self.sourcesCounter-1,sourceHBox)
+        self.add_default_source()
 
-    def add_source(self,option,value):
+    def add_source(self, option: int, value: str) -> None:
         """ Adds a source Horizontal Box.
         Args:
             option(int): 0: Web-url, 1: Local File
             value(str): The url or the local file path of the pgn.
         """
-        if(self.sourceHBox.get_value() == ""):
-            self.sourceHBox.set_source(option)
-            self.sourceHBox.set_value(value)
-        else:
-            self.sourcesCounter = self.sourcesCounter+1
-            sourceHBox = SourceHBox(self)
-            sourceHBox.set_source(option)
-            sourceHBox.set_value(value)
-            self.sources.append(sourceHBox)
-            self.layout.insertWidget(self.sourcesCounter-1,sourceHBox)
+        self.sources_cnt = self.sources_cnt + 1
+        source_hbox = SourceHBox(self)
+        source_hbox.set_source(option)
+        source_hbox.set_value(value)
+        self.sources.append(source_hbox)
+        self.layout.insertWidget(self.sources_cnt - 1, source_hbox)
 
-    def set_slots(self, slots):
-        """ Connect the Slots """
+    def add_default_source(self) -> None:
+        self.add_source(0, "")
+
+    def set_slots(self, slots) -> None:
         self.slots = slots
 
-    def get_remember_option(self):
-        return self.bottomBox.rememberOption
+    def enable_ok_button(self) -> None:
+        self.bottomBox.change_ok_status(True)
 
-    def enable_okButton(self):
-        self.bottomBox.okButton.setEnabled(True)
+    def disable_ok_button(self) -> None:
+        self.bottomBox.change_ok_status(False)
 
-    def disable_okButton(self):
-        self.bottomBox.okButton.setEnabled(False)
+    def remove_hbox(self, hbox) -> None:
+        self.layout.removeWidget(hbox)
+        self.sources.remove(hbox)
+        self.sources_cnt -= 1
+
+        hbox.deleteLater()
+        self.adjustSize()
+
 
 class SourceHBox(QWidget):
     """ Provide a Horizontal Box with a Combo Box a Line Edit for user input,
@@ -119,129 +120,138 @@ class SourceHBox(QWidget):
     Attributes:
         dialog: The Source Dialog with the Horizontal Box is located on.
     """
-    def __init__(self,dialog):
+    __slots__ = ['dialog', 'select_source', 'source_value', 'choose_button', 'status_image', 'ok_pixmap',
+                 'error_pixmap']
+
+    def __init__(self, dialog: AddSourceDialog) -> None:
         super().__init__()
         self.dialog = dialog
 
         # Create the Combo Box with 2 options.
-        self.selectSource = QComboBox()
-        self.selectSource.addItems(["Web(url)","Local"])
-        self.selectSource.currentIndexChanged.connect(self.select_change)
+        self.select_source = QComboBox()
+        self.select_source.addItems(["Web(url)", "Local"])
+        self.select_source.currentIndexChanged.connect(self.select_change)
 
         # Create the Line Edit for user input.
-        self.sourceValue = QLineEdit()
-        self.sourceValue.textChanged.connect(self.line_edit_change)
-        self.sourceValue.setPlaceholderText("http://example.com/pgn/games.pgn")
+        self.source_value = QLineEdit()
+        self.source_value.textChanged.connect(self.line_edit_changed)
+        self.source_value.setPlaceholderText("https://example.com/pgn/games.pgn")
 
         # Choose File Button in case of the Local File Option
-        self.chooseButton = QPushButton("Choose File")
-        self.chooseButton.clicked.connect(self.on_chooseButton_clicked)
-        self.chooseButton.setHidden(True)
+        self.choose_button = QPushButton("Choose File")
+        self.choose_button.clicked.connect(self.on_choose_button_clicked)
+        self.choose_button.setHidden(True)
 
         # Create the Status Image
-        self.statusImage = QLabel()
+        self.status_image = QLabel()
         self.ok_pixmap = QPixmap(resource_path("check_icon.png"))
         self.error_pixmap = QPixmap(resource_path("error_icon.png"))
 
         # Create the Delete Button
-        deleteButton = QPushButton("")
-        deleteButton.setIcon(QIcon(resource_path("delete_icon.png")))
-        deleteButton.setIconSize(QSize(self.dialog.iconsSize,self.dialog.iconsSize))
-        deleteButton.setObjectName('DeleteSource')
-        deleteButton.clicked.connect(partial(self.dialog.slots.on_deleteButton_clicked,self))
+        delete_button = QPushButton("")
+        delete_button.setIcon(QIcon(resource_path("delete_icon.png")))
+        delete_button.setIconSize(QSize(self.dialog.ICON_SIZE, self.dialog.ICON_SIZE))
+        delete_button.setObjectName('DeleteSource')
+        delete_button.clicked.connect(partial(self.dialog.slots.on_delete_button_clicked, self))
 
         # Add all the above elements to layout.
         layout = QHBoxLayout()
-        layout.addWidget(self.selectSource)
-        layout.addWidget(self.sourceValue)
-        layout.addWidget(self.chooseButton)
-        layout.addWidget(self.statusImage)
-        layout.addWidget(deleteButton)
+        layout.addWidget(self.select_source)
+        layout.addWidget(self.source_value)
+        layout.addWidget(self.choose_button)
+        layout.addWidget(self.status_image)
+        layout.addWidget(delete_button)
 
         self.setLayout(layout)
         self.adjustSize()
 
-    def set_value(self,text):
-        self.sourceValue.setText(text)
+    def set_value(self, text: str) -> None:
+        self.source_value.setText(text)
 
-    def set_source(self,index):
-        self.selectSource.setCurrentIndex(index)
+    def set_source(self, index: int) -> None:
+        self.select_source.setCurrentIndex(index)
 
-    def get_value(self):
-        return self.sourceValue.text()
+    def get_value(self) -> str:
+        return self.source_value.text()
 
-    def get_source_index(self):
-        return self.selectSource.currentIndex()
+    def get_source_index(self) -> int:
+        return self.select_source.currentIndex()
 
-    def line_edit_change(self):
-        self.dialog.disable_okButton()
-        self.statusImage.clear()
+    def has_url(self) -> bool:
+        return self.select_source.currentIndex() == 0
 
-    def select_change(self,index):
-        """ Actions when the user select a different option at the Combo Box.
+    def has_local(self) -> bool:
+        return self.select_source.currentIndex() == 1
+
+    def line_edit_changed(self) -> None:
+        self.dialog.disable_ok_button()
+        self.status_image.clear()
+
+    def select_change(self, index: int) -> None:
+        """ Actions when the user selects a different option at the Combo Box.
         Args:
             index: The index of the option. 0: Web Url, 1: Local File
         """
-        self.statusImage.clear()
-        self.dialog.disable_okButton()
-        if(index == 0): # Web download option
-            self.chooseButton.setHidden(True)
-            self.sourceValue.setText("")
-            self.sourceValue.setPlaceholderText("http://example.com/pgn/games.pgn")
-        elif(index == 1): # Local source option
-            self.chooseButton.setHidden(False)
-            self.sourceValue.setText("")
-            self.sourceValue.setPlaceholderText("")
+        self.line_edit_changed()
+        if index == 0:  # Web download option
+            self.choose_button.setHidden(True)
+            self.source_value.setText("")
+            self.source_value.setPlaceholderText("https://example.com/pgn/games.pgn")
+        elif index == 1:  # Local source option
+            self.choose_button.setHidden(False)
+            self.source_value.setText("")
+            self.source_value.setPlaceholderText("")
 
-    def set_status(self,status):
+    def set_status(self, status: Status) -> None:
         """ Adds the Status Image.
         Args:
             status(str): The validity of the source. It has two states:
                          "ok": The source is valid.
                          "error": The source is invalid.
         """
-        if (status == "ok"):
-            self.statusImage.setPixmap(self.ok_pixmap.scaled(self.dialog.iconsSize,self.dialog.iconsSize,transformMode=Qt.SmoothTransformation))
-        elif (status == "error"):
-            self.statusImage.setPixmap(self.error_pixmap.scaled(self.dialog.iconsSize,self.dialog.iconsSize,transformMode=Qt.SmoothTransformation))
+        if status is Status.ok:
+            self.status_image.setPixmap(self.ok_pixmap.scaled(self.dialog.ICON_SIZE, self.dialog.ICON_SIZE,
+                                                              transformMode=Qt.SmoothTransformation))
+        elif status is Status.error:
+            self.status_image.setPixmap(self.error_pixmap.scaled(self.dialog.ICON_SIZE, self.dialog.ICON_SIZE,
+                                                                 transformMode=Qt.SmoothTransformation))
 
-    def on_chooseButton_clicked(self):
+    def on_choose_button_clicked(self) -> None:
         """ Opens a file explorer for the user to choose a file.
         Trigger: User clicks the "Choose File" button of the Horizontal Box.
         """
-        fileName,_= QFileDialog.getOpenFileName(self,"Select File", "","PGN Files (*.pgn)")
-        if fileName: self.sourceValue.setText(fileName)
+        filename, _ = QFileDialog.getOpenFileName(self, "Select File", "", "PGN Files (*.pgn)")
+        if filename:
+            self.source_value.setText(filename)
+
 
 class BottomBox(QWidget):
-    """ Provides a Horizontal Box with two Buttons and a Check Box.
+    """ Provides a Horizontal Box with two Buttons and a checkbox.
     Attributes:
         dialog: The Source Dialog with the Horizontal Box is located on.
     """
+    __slots__ = ['dialog', 'ok_button']
 
-    def __init__(self,dialog):
+    def __init__(self, dialog: AddSourceDialog) -> None:
         super().__init__()
         self.dialog = dialog
 
         # Create the Apply and Ok Buttons.
-        applyButton = QPushButton("Apply")
-        self.okButton = QPushButton("ΟΚ")
-        applyButton.setObjectName("apply")
-        self.okButton.setObjectName("ok")
-        applyButton.clicked.connect(self.dialog.slots.on_applyButton_clicked)
-        self.okButton.clicked.connect(self.dialog.slots.on_okButton_clicked)
-
-        self.okButton.setEnabled(False)
-
-        # Create the Check Box
-        self.rememberOption = QCheckBox("Remember Sources")
-        self.rememberOption.setLayoutDirection(Qt.RightToLeft)
-        self.rememberOption.setChecked(1)
+        apply_button = QPushButton("Apply")
+        self.ok_button = QPushButton("ΟΚ")
+        apply_button.setObjectName("apply")
+        self.ok_button.setObjectName("ok")
+        apply_button.clicked.connect(self.dialog.slots.on_apply_button_clicked)
+        self.ok_button.clicked.connect(self.dialog.slots.on_ok_button_clicked)
+        self.ok_button.setEnabled(False)
 
         # Add all the above elements to layout.
         layout = QHBoxLayout()
         layout.setSpacing(30)
-        layout.addWidget(applyButton)
-        layout.addWidget(self.okButton)
-        layout.addWidget(self.rememberOption)
+        layout.addWidget(apply_button)
+        layout.addWidget(self.ok_button)
 
         self.setLayout(layout)
+
+    def change_ok_status(self, status: bool) -> None:
+        self.ok_button.setEnabled(status)

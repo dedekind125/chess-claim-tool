@@ -22,7 +22,7 @@ from PyQt5.QtWidgets import QApplication
 from ChessClaimView import ChessClaimView
 from ChessClaimSlots import ChessClaimSlots
 from Claims import Claims
-from helpers import get_appData_path
+from helpers import get_appdata_path
 
 class ChessClaimController(QApplication):
     """ The Controller of the whole application.
@@ -43,7 +43,7 @@ class ChessClaimController(QApplication):
         """ Perform startup operations and shows the dialog.
         Called once, on application startup. """
 
-        appPath = get_appData_path()
+        appPath = get_appdata_path()
 
         # Set up application directory
         if not os.path.exists(appPath): os.makedirs(appPath)
@@ -53,7 +53,7 @@ class ChessClaimController(QApplication):
         self.view.set_slots(self.slots)
 
         # Initialize the GUI
-        self.view.set_GUI()
+        self.view.set_gui()
 
         # Show the GUI
         self.view.show()

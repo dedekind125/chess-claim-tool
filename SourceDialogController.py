@@ -1,7 +1,7 @@
 """
 Chess Claim Tool: SourceDialogController
 
-Copyright (C) 2019 Serntedakis Athanasios <thanasis@brainfriz.com>
+Copyright (C) 2022 Serntedakis Athanasios <thanserd@hotmail.com>
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -17,64 +17,65 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-import os.path, json
-from PyQt5.QtWidgets import QApplication
-from SourceDialogSlots import SourceDialogSlots
-from DownloadPgn import DownloadPgn
-from helpers import get_appData_path
+import json
+import os.path
+from typing import List
 
-class SourceDialogController():
+from SourceDialogSlots import SourceDialogSlots
+from SourceDialogView import SourceHBox
+from helpers import get_appdata_path
+
+
+class SourceDialogController:
     """ The Controller of sources Dialog.
 
     Attributes:
-        downloadModel: Object of the Download Class.
         view: The view(GUI) of the dialog.
     """
-    def __init__(self):
-        self.downloadModel = DownloadPgn()
+    __slots__ = ['dialogSlots', 'view']
 
-    def set_view(self,view):
+    def __init__(self) -> None:
+        self.dialogSlots = None
+        self.view = None
+
+    def set_view(self, view) -> None:
         self.view = view
 
-    def do_start(self):
+    def do_start(self) -> None:
         """ Perform startup operations and shows the dialog.
         Called once, on dialog startup."""
 
-        #Connect the signals from the View to the Slots
-        self.dialogSlots = SourceDialogSlots(self.downloadModel,self.view)
+        self.dialogSlots = SourceDialogSlots(self.view)
         self.view.set_slots(self.dialogSlots)
 
-        # Initialize the GUI
-        self.view.set_GUI()
+        self.view.set_gui()
 
-        # Load values from JSON if the user choosed the Remember Sources Option last time
-        appPath = get_appData_path()
+        # Load values from JSON
+        app_path = get_appdata_path()
         try:
-            file = open(os.path.join(appPath,"sources.json"),"r")
-            data = json.load(file)
-            file.close()
-            for entry in data:
-                self.view.add_source(entry["option"],entry["value"])
-
-        except FileNotFoundError:
-            pass
-
+            with open(os.path.join(app_path, "sources.json"), "r") as file:
+                data = json.load(file)
+                if not data:
+                    self.view.add_default_source()
+                for entry in data:
+                    self.view.add_source(entry["option"], entry["value"])
         except json.decoder.JSONDecodeError:
-            file.close()
+            self.view.add_default_source()
+        except FileNotFoundError:
+            self.view.add_default_source()
 
-        # Show the GUI
         self.view.show()
 
-    def do_resume(self):
+    def do_resume(self) -> None:
         """ Shows the dialog from the previous state the user left itself.
         That means that do_start has been preceded."""
         self.view.show()
 
-    def get_filepathList(self):
-        return self.dialogSlots.filepathList
+    def get_filepath_list(self) -> List[str]:
+        return self.dialogSlots.filepaths
 
-    def get_validSources(self):
-        return self.dialogSlots.validSources
+    def get_valid_sources(self) -> List[SourceHBox]:
+        return self.view.sources
 
-    def get_downloadList(self):
-        return self.dialogSlots.downloadList
+    def get_download_list(self) -> List[str]:
+        return self.dialogSlots.downloads

@@ -18,50 +18,60 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 QPushButton#AddSource {
-    border:none;
+    border: none;
     background-color: transparent;
     margin-right: 7px;
 }
+
 QPushButton#DeleteSource {
-    border:none;
+    border: none;
     background-color: transparent;
 }
+
 QPushButton#Scan {
-    background-color:#1496e8;
+    background-color: #1496e8;
     font-size: 17px;
-    font-weight:bold;
-    color:#fff;
+    font-weight: bold;
+    color: #fff;
 }
-QPushButton#Stop{
-    background-color:#f22618;
+
+QPushButton#Stop {
+    background-color: #f22618;
     font-size: 17px;
-    font-weight:bold;
-    color:#fff;
+    font-weight: bold;
+    color: #fff;
 }
-QPushButton#sources{
-  font-size: 13px;
-  padding: 5px;
+
+QPushButton#sources {
+    font-size: 13px;
+    padding: 5px;
 }
-QStatusBar{
-  border-top: 1px solid #DCDCDC;
+
+QStatusBar {
+    border-top: 1px solid #DCDCDC;
 }
-QLabel#download-image,#source-image,#scan-image{
+
+QLabel#download-image, #source-image, #scan-image {
     margin-right: 10px;
 }
-QHeaderView{
-  background-color:#fff;
-  font-weight:bold;
-  color: #605f5f;
-  font-size: 12px;
+
+QHeaderView {
+    background-color: #fff;
+    font-weight: bold;
+    color: #605f5f;
+    font-size: 12px;
 }
-QLabel#appname{
-  font-weight: bold;
-  font-size: 14px;
+
+QLabel#appname {
+    font-weight: bold;
+    font-size: 14px;
 }
-QLabel#copyright{
-  font-size: 10px;
+
+QLabel#copyright {
+    font-size: 10px;
 }
-QTreeView::item:selected{
-  color: #fff;
-  background-color: #006ae9;
+
+QTreeView::item:selected {
+    color: #fff;
+    background-color: #006ae9;
 }

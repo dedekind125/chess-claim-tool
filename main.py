@@ -1,7 +1,7 @@
 """
 Chess Claim Tool
 
-Copyright (C) 2019 Serntedakis Athanasios <thanasis@brainfriz.com>
+Copyright (C) 2022 Serntedakis Athanasios <thanserd@hotmail.com>
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -31,10 +31,9 @@ if __name__ == '__main__':
     app.setStyle('fusion')
     app.setWindowIcon(QIcon(resource_path("logo.png")))
 
-    """Load the CSS file for the application"""
     css = "main.css"
-    with open(resource_path(css), 'r') as myfile:
-        css = myfile.read().replace('\n', '')
+    with open(resource_path(css), 'r') as css_file:
+        css = css_file.read().replace('\n', '')
     app.setStyleSheet(css)
 
     view = ChessClaimView()
