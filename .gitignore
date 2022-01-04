@@ -5,3 +5,4 @@ screenshots/.DS_Store
 build/.DS_Store
 .python-version
 __pycache__
+.idea
