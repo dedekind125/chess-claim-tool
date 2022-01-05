@@ -209,10 +209,10 @@ class SourceHBox(QWidget):
                          "ok": The source is valid.
                          "error": The source is invalid.
         """
-        if status is Status.ok:
+        if status is Status.OK:
             self.status_image.setPixmap(self.ok_pixmap.scaled(self.dialog.ICON_SIZE, self.dialog.ICON_SIZE,
                                                               transformMode=Qt.SmoothTransformation))
-        elif status is Status.error:
+        elif status is Status.ERROR:
             self.status_image.setPixmap(self.error_pixmap.scaled(self.dialog.ICON_SIZE, self.dialog.ICON_SIZE,
                                                                  transformMode=Qt.SmoothTransformation))
 

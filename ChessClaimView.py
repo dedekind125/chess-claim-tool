@@ -19,10 +19,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import platform
 from datetime import datetime
 from PyQt5.QtWidgets import (QMainWindow, QWidget, QTreeView, QPushButton, QDesktopWidget,
-QAbstractItemView, QHBoxLayout, QVBoxLayout, QLabel, QStatusBar, QMessageBox, QAction, QDialog)
+                             QAbstractItemView, QHBoxLayout, QVBoxLayout, QLabel, QStatusBar, QMessageBox, QAction,
+                             QDialog)
 from PyQt5.QtGui import QStandardItemModel, QPixmap, QMovie, QStandardItem, QColor
 from PyQt5.QtCore import Qt, QSize
+
+from Claims import ClaimType
 from helpers import resource_path
+
 
 class ChessClaimView(QMainWindow):
     """ The main window of the application.
@@ -32,6 +36,7 @@ class ChessClaimView(QMainWindow):
         mac_notification: Notification for macOS
         win_notification: Notification for windows OS
     """
+
     def __init__(self):
         super().__init__()
 
@@ -51,16 +56,16 @@ class ChessClaimView(QMainWindow):
         """ Centers the window on the screen """
         screen = QDesktopWidget().screenGeometry()
         size = self.geometry()
-        self.move((screen.width()-size.width())/2,
-            (screen.height()-size.height())/2)
+        self.move((screen.width() - size.width()) / 2,
+                  (screen.height() - size.height()) / 2)
 
     def set_gui(self):
         """ Initialize GUI components. """
 
         # Create the Menu
-        self.livePgnOption = QAction('Live PGN',self)
+        self.livePgnOption = QAction('Live PGN', self)
         self.livePgnOption.setCheckable(True)
-        aboutAction = QAction('About',self)
+        aboutAction = QAction('About', self)
 
         menubar = self.menuBar()
 
@@ -83,7 +88,7 @@ class ChessClaimView(QMainWindow):
 
         # Create the Claims Model
         self.claimsTableModel = QStandardItemModel()
-        labels = ["#","Timestamp","Type","Board","Players","Move"]
+        labels = ["#", "Timestamp", "Type", "Board", "Players", "Move"]
         self.claimsTableModel.setHorizontalHeaderLabels(labels)
         self.claimsTable.setModel(self.claimsTableModel)
 
@@ -123,7 +128,7 @@ class ChessClaimView(QMainWindow):
         self.statusBar.addWidget(self.scanLabel)
         self.statusBar.addWidget(self.scanImage)
         self.statusBar.addPermanentWidget(sourcesButton)
-        self.statusBar.setContentsMargins(10,5,9,5)
+        self.statusBar.setContentsMargins(10, 5, 9, 5)
 
         # Container Layout for the Central Widget
         containerLayout = QVBoxLayout()
@@ -140,48 +145,42 @@ class ChessClaimView(QMainWindow):
 
     def resize_claimsTable(self):
         """ Resize the table (if needed) after the insertion of a new element. """
-        for index in range(0,6):
+        for index in range(0, 6):
             self.claimsTable.resizeColumnToContents(index)
 
     def set_slots(self, slots):
         """ Connect the Slots """
         self.slots = slots
 
-    def add_to_table(self,entry):
+    def add_to_table(self, entry):
         """ Add new row to the claimsTable
         Args:
-            claimType: The type of the draw (3 Fold Repetition, 5 Fold Repetition,
-                                        50 Moves Rule, 75 Moves Rule).
-            bo_number: The number of the boards, if this information is available.
-            players: The name of the players.
-            move: With which move the draw is valid.
-        """
-        claimType,bo_number,players,move = entry[:4]
 
-        # Before insertion, remove rows as descripted in the remove_rows function
-        self.remove_rows(claimType,players)
+        """
+        claim_type, board_number, players, move = entry[:4]
+
+        self.remove_rows(claim_type, players)
 
         timestamp = str(datetime.now().strftime('%H:%M:%S'))
         row = []
-        count = str(self.claimsTableModel.rowCount()+1)
-        items = [count,timestamp,claimType,bo_number,players,move]
+        count = str(self.claimsTableModel.rowCount() + 1)
+        items = [count, timestamp, claim_type.value, board_number, players, move]
 
         """ Convert each item(str) to QStandardItem, make the necessary stylistic
         additions and append it to row."""
+        for idx, item in enumerate(items):
+            standard_item = QStandardItem(item)
+            standard_item.setTextAlignment(Qt.AlignCenter)
 
-        for index in range(len(items)):
-            standardItem = QStandardItem(items[index])
-            standardItem.setTextAlignment(Qt.AlignCenter)
-
-            if(index == 2):
-                font = standardItem.font()
+            if idx == 2:
+                font = standard_item.font()
                 font.setBold(True)
-                standardItem.setFont(font)
+                standard_item.setFont(font)
 
-            if (items[index] == "5 Fold Repetition" or items[index] == "75 Moves Rule"):
-                standardItem.setData(QColor(255,0,0), Qt.ForegroundRole)
+            if item == ClaimType.FIVEFOLD or item == ClaimType.SEVENTYFIVE_MOVES:
+                standard_item.setData(QColor(255, 0, 0), Qt.ForegroundRole)
 
-            row.append(standardItem)
+            row.append(standard_item)
 
         self.claimsTableModel.appendRow(row)
 
@@ -191,66 +190,65 @@ class ChessClaimView(QMainWindow):
         # Always the last row(the bottom of the table) should be visible.
         self.claimsTable.scrollToBottom()
 
-        #Send Notification
-        self.notify(claimType,players,move)
+        # Send Notification
+        self.notify(claim_type, players, move)
 
-    def notify(self,claimType,players,move):
+    def notify(self, claim_type, players, move):
         """ Send notification depending on the OS.
         Args:
-            claimType: The type of the draw (3 Fold Repetition, 5 Fold Repetition,
+            claim_type: The type of the draw (3 Fold Repetition, 5 Fold Repetition,
                                         50 Moves Rule, 75 Moves Rule).
             players: The names of the players.
             move: With which move the draw is valid.
         """
-        if (platform.system() == "Darwin"):
+        if platform.system() == "Darwin":
             self.mac_notification.clearNotifications()
-            self.mac_notification.notify(claimType,players,move)
-        elif(platform.system() == "Windows"):
-                self.win_notification.show_toast(claimType,
-                                   players+"\n"+move,
-                                   icon_path=resource_path("logo.ico"),
-                                   duration=5,
-                                   threaded=True)
+            self.mac_notification.notify(claim_type.value, players, move)
+        elif platform.system() == "Windows":
+            self.win_notification.show_toast(claim_type.value,
+                                             f"{players} \n {move}",
+                                             icon_path=resource_path("logo.ico"),
+                                             duration=5,
+                                             threaded=True)
 
-    def remove_from_table(self,index):
+    def remove_from_table(self, index):
         """ Remove element from the claimsTable.
         Args:
             index: The index of the row we want to remove. First row has index=0.
         """
         self.claimsTableModel.removeRow(index)
 
-    def remove_rows(self,claimType,players):
+    def remove_rows(self, claim_type, players):
         """ Removes a existing row from the Claims Table when same players made
         the same type of draw with a new move - or they made 5 Fold Repetition
         over the 3 Fold or 75 Moves Rule over 50 moves Rule.
 
         Args:
-            claimType: The type of the draw (3 Fold Repetition, 5 Fold Repetition,
+            claim_type: The type of the draw (3 Fold Repetition, 5 Fold Repetition,
                                         50 Moves Rule, 75 Moves Rule).
             players: The names of the players.
         """
         for index in range(self.claimsTableModel.rowCount()):
-
             try:
-                modelType = self.claimsTableModel.item(index,2).text()
-                modelPlayers = self.claimsTableModel.item(index,4).text()
+                model_type = self.claimsTableModel.item(index, 2).text()
+                model_players = self.claimsTableModel.item(index, 4).text()
             except AttributeError:
-                modelType = ""
-                modelPlayers = ""
+                model_type = ""
+                model_players = ""
 
-            if (modelType == claimType and modelPlayers == players):
+            if model_type == claim_type.value and model_players == players:
                 self.remove_from_table(index)
                 self.reset_countColumn()
                 break
-            elif (claimType == "5 Fold Repetition" and \
-                modelType == "3 Fold Repetition"   and \
-                modelPlayers == players):
+            elif (claim_type is ClaimType.FIVEFOLD and
+                  model_type == ClaimType.THREEFOLD.value and
+                  model_players == players):
                 self.remove_from_table(index)
                 self.reset_countColumn()
                 break
-            elif (claimType == "75 Moves Rule" and \
-                  modelType == "50 Moves Rule" and \
-                  modelPlayers == players):
+            elif (claim_type is ClaimType.SEVENTYFIVE_MOVES and
+                  model_type == ClaimType.FIFTY_MOVES.value and
+                  model_players == players):
                 self.remove_from_table(index)
                 self.reset_countColumn()
                 break
@@ -261,16 +259,16 @@ class ChessClaimView(QMainWindow):
         """
         rowCount = self.claimsTableModel.rowCount()
         for index in range(rowCount):
-            standardItem = QStandardItem(str(index+1))
+            standardItem = QStandardItem(str(index + 1))
             standardItem.setTextAlignment(Qt.AlignCenter)
-            self.claimsTableModel.setItem(index,0,standardItem)
+            self.claimsTableModel.setItem(index, 0, standardItem)
 
     def clear_table(self):
         """ Clear all the elements off the Claims Table. """
         for index in range(self.claimsTableModel.rowCount()):
             self.claimsTableModel.removeRow(0)
 
-    def set_sources_status(self,status,validSources=None):
+    def set_sources_status(self, status, validSources=None):
         """ Adds the sourcess in the statusBar.
         Args:
             status(str): The status of the validity of the sources.
@@ -286,27 +284,27 @@ class ChessClaimView(QMainWindow):
             text = ""
             for index in range(len(validSources)):
                 if (index == len(validSources) - 1):
-                    number = str(index+1)
-                    text = text+number+") "+validSources[index].get_value()
+                    number = str(index + 1)
+                    text = text + number + ") " + validSources[index].get_value()
                 else:
-                    number = str(index+1)
-                    text = text+number+") "+validSources[index].get_value()+"\n"
+                    number = str(index + 1)
+                    text = text + number + ") " + validSources[index].get_value() + "\n"
             self.sourceLabel.setToolTip(text)
         except TypeError:
             pass
 
         if (status == "ok"):
             self.sourceImage.setPixmap(self.pixmapCheck.scaled
-                                        (self.iconsSize,self.iconsSize,
+                                       (self.iconsSize, self.iconsSize,
                                         transformMode=Qt.SmoothTransformation)
-                                    )
+                                       )
         else:
             self.sourceImage.setPixmap(self.pixmapError.scaled
-                                        (self.iconsSize,self.iconsSize,
+                                       (self.iconsSize, self.iconsSize,
                                         transformMode=Qt.SmoothTransformation)
-                                    )
+                                       )
 
-    def set_download_status(self,status):
+    def set_download_status(self, status):
         """ Adds download status in the statusBar.
         Args:
             status(str): The status of the download(s).
@@ -315,22 +313,22 @@ class ChessClaimView(QMainWindow):
                 "stop": The download process stopped.
         """
         timestamp = str(datetime.now().strftime('%H:%M:%S'))
-        self.downloadLabel.setText(timestamp+" Download:")
+        self.downloadLabel.setText(timestamp + " Download:")
         if (status == "ok"):
             self.downloadImage.setPixmap(self.pixmapCheck.scaled
-                                        (self.iconsSize,self.iconsSize,
-                                        transformMode=Qt.SmoothTransformation)
-                                    )
+                                         (self.iconsSize, self.iconsSize,
+                                          transformMode=Qt.SmoothTransformation)
+                                         )
         elif (status == "error"):
             self.downloadImage.setPixmap(self.pixmapError.scaled
-                                        (self.iconsSize,self.iconsSize,
-                                        transformMode=Qt.SmoothTransformation)
-                                    )
+                                         (self.iconsSize, self.iconsSize,
+                                          transformMode=Qt.SmoothTransformation)
+                                         )
         elif (status == "stop"):
             self.downloadImage.clear()
             self.downloadLabel.clear()
 
-    def set_scan_status(self,status):
+    def set_scan_status(self, status):
         """ Adds the scan status in the statusBar.
         Args:
             status(str): The status of the scan process.
@@ -339,12 +337,12 @@ class ChessClaimView(QMainWindow):
                 "stop": The scan process stopped.
         """
         timestamp = str(datetime.now().strftime('%H:%M:%S'))
-        self.scanLabel.setText(timestamp+" Scan:")
+        self.scanLabel.setText(timestamp + " Scan:")
         if (status == "wait"):
             self.scanImage.setPixmap(self.pixmapCheck.scaled
-                                    (self.iconsSize,self.iconsSize,
-                                    transformMode=Qt.SmoothTransformation)
-                                )
+                                     (self.iconsSize, self.iconsSize,
+                                      transformMode=Qt.SmoothTransformation)
+                                     )
         elif (status == "active"):
             self.scanImage.clear()
             self.scanImage.setMovie(self.spinner)
@@ -352,7 +350,7 @@ class ChessClaimView(QMainWindow):
             self.scanLabel.clear()
             self.scanImage.clear()
 
-    def change_scanButton_text(self,status):
+    def change_scanButton_text(self, status):
         """ Changes the text of the scanButton depending on the status of the application.
         Args:
             status(str): The status of the scan process.
@@ -364,7 +362,7 @@ class ChessClaimView(QMainWindow):
             self.buttonBox.scanButton.setText("Scanning PGN...")
         elif (status == "stop"):
             self.buttonBox.scanButton.setText("Start Scan")
-        elif(status == "wait"):
+        elif (status == "wait"):
             self.buttonBox.scanButton.setText("Please Wait")
 
     def enable_buttons(self):
@@ -390,7 +388,7 @@ class ChessClaimView(QMainWindow):
         self.scanLabel.setVisible(False)
         self.scanImage.setVisible(False)
 
-    def closeEvent(self,event):
+    def closeEvent(self, event):
         """ Reimplement the close button
         If the program is actively scanning a pgn a warning dialog shall be raised
         in order to make sure that the user didn't clicked the close Button accidentally.
@@ -433,13 +431,15 @@ class ChessClaimView(QMainWindow):
         self.aboutDialog.set_GUI()
         self.aboutDialog.show()
 
+
 class ButtonBox(QWidget):
     """ Provides a Horizontal Box with two Buttons.
     Attributes:
         scanButton: The scan Button
         stopButton: The stop Button
     """
-    def __init__(self,mainWindow):
+
+    def __init__(self, mainWindow):
         super().__init__()
 
         # Create the Buttons
@@ -453,15 +453,17 @@ class ButtonBox(QWidget):
 
         # Add all the above elements to layout.
         layout = QHBoxLayout()
-        layout.setContentsMargins(0,5,0,0)
+        layout.setContentsMargins(0, 5, 0, 0)
         layout.setSpacing(5)
         layout.addWidget(self.scanButton)
         layout.addWidget(self.stopButton)
 
         self.setLayout(layout)
 
+
 class AboutDialog(QDialog):
     """ About dialog's GUI. """
+
     def __init__(self):
         super().__init__()
         self.setWindowTitle("About")

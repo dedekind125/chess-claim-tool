@@ -118,11 +118,11 @@ class SourceDialogSlots:
             elif source_hbox.has_local():
                 filepath = source_hbox.get_value()
                 if os.path.exists(filepath):
-                    source_hbox.set_status(Status.ok)
+                    source_hbox.set_status(Status.OK)
                     if filepath not in self.filepaths:
                         self.filepaths.append(filepath)
                 else:
-                    source_hbox.set_status(Status.error)
+                    source_hbox.set_status(Status.ERROR)
 
         self.threadPool.waitForDone()
         self.apply_mutex_lock.release()
@@ -145,7 +145,7 @@ class SourceDialogSlots:
 
     def save_sources(self) -> None:
         """ Saves the valid sources to the JSON file """
-        data = [{"option": source.get_source_index, "value": source.get_value()} for source in self.view.sources]
+        data = [{"option": source.get_source_index(), "value": source.get_value()} for source in self.view.sources]
         with open(os.path.join(self.app_path, 'sources.json'), 'w') as file:
             json.dump(data, file, indent=4)
 

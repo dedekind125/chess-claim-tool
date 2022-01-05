@@ -21,7 +21,9 @@ import time
 from threading import Thread
 
 from PyQt5.QtCore import QRunnable, QThread, pyqtSignal
+from chess.pgn import read_game
 
+from Claims import get_players
 from DownloadPgn import check_download, download_pgn
 from helpers import get_appdata_path, Status
 
@@ -43,11 +45,11 @@ class CheckDownload(QRunnable):
     def run(self):
         url = self.source.get_value()
         if check_download(url):
-            self.source.set_status(Status.ok)
+            self.source.set_status(Status.OK)
             if url not in self.slots.downloads:
                 self.slots.add_valid_url(url, self.download_id)
         else:
-            self.source.set_status(Status.error)
+            self.source.set_status(Status.ERROR)
 
 
 class DownloadGames(QThread):
@@ -74,11 +76,11 @@ class DownloadGames(QThread):
         self.is_running = True
         while self.is_running:
             for url in self.downloads:
-                status = Status.ok
+                status = Status.OK
 
                 data = download_pgn(url)
                 if not data:
-                    status = Status.error
+                    status = Status.ERROR
 
                 self.status_signal.emit(status)
 
@@ -87,8 +89,8 @@ class DownloadGames(QThread):
                     with open(filename, "wb") as file:
                         file.write(data)
                 except (FileNotFoundError, TypeError):
-                    self.status_signal.emit(Status.error)
-                    break
+                    self.status_signal.emit(Status.ERROR)
+                    continue
             if not self.is_loop:
                 break
             time.sleep(self.INTERVAL)
@@ -217,7 +219,7 @@ class Stop(QThread):
         """ Clear all the variables storing information from the model
         in order to be ready for the new scan. """
 
-        self.model.empty_dontCheck()
+        self.model.empty_dont_check()
         self.model.empty_entries()
 
 
@@ -293,18 +295,17 @@ class CheckPgn(Thread):
         self.lock.acquire()
 
         with open(self.filename) as pgn:
-
             # Loop to go through all of the games of the pgn.
-            while (self.isRunning):
+            while self.isRunning:
                 try:
-                    game = self.model.read_game(pgn)
+                    game = read_game(pgn)
                 except:
                     continue
-                if (game == None):  # There aren't any games left in the pgn.
+                if not game:  # There aren't any games left in the pgn.
                     break
-                if (self.livePgnOption.isChecked() and game.headers["Result"] != "*"):
+                if self.livePgnOption.isChecked() and game.headers["Result"] != "*":
                     continue
-                if (self.model.get_players(game) in self.model.dontCheck): continue
+                if get_players(game) in self.model.dont_check: continue
                 self.model.check_game(game)
 
         self.lock.release()

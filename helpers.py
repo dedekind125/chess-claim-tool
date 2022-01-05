@@ -50,6 +50,6 @@ def get_appdata_path() -> str:
 
 
 class Status(enum.Enum):
-    ok = 1
-    error = 2
-    stop = 3
+    OK = 1
+    ERROR = 2
+    STOP = 3
