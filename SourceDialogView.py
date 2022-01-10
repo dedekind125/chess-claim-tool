@@ -36,7 +36,7 @@ class AddSourceDialog(QDialog):
     ICON_SIZE = 20
     __slots__ = ['slots', 'layout', 'bottomBox', 'sources', 'source_cnt']
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.setModal(True)
         self.setMinimumWidth(420)

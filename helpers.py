@@ -53,3 +53,5 @@ class Status(enum.Enum):
     OK = 1
     ERROR = 2
     STOP = 3
+    ACTIVE = 4
+    WAIT = 5

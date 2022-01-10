@@ -58,10 +58,9 @@ class DownloadGames(QThread):
 
     Attributes:
         downloads: The list of urls to download.
-        is_loop(bool): True if downloading continously, else download once.
-        status_signal: Signal to update GUI.
+        is_loop(bool): True if downloading continuously, else download once.
     """
-    status_signal = pyqtSignal(Status)
+    status_signal = pyqtSignal(Status)  # Signal to update GUI.
     INTERVAL = 4
     __slots__ = ["downloads", "is_loop", "is_running", "app_path"]
 
@@ -105,73 +104,72 @@ class Scan(QThread):
 
     Attributes:
         filename: The path of the combined pgn file.
-        model: An Object of Claims Class.
+        claims: An Object of Claims Class.
         lock: The fileLock for the games.pgn between CheckPgn and MakePgn threads.
-        livePgnOption: The checkbox object on the menu.
+        live_pgn_option: The checkbox object on the menu.
         isRunning(bool): True if the thread is running, false otherwise.
-        addEntrySignal: Signal to update the GUI.
-        statusSignal: Signal to update the GUI.
     """
-    addEntrySignal = pyqtSignal(list)
-    statusSignal = pyqtSignal(str)
+    addEntrySignal = pyqtSignal(list)  # Signal to update the GUI.
+    statusSignal = pyqtSignal(Status)  # Signal to update the GUI.
 
-    def __init__(self, model, filename, lock, livePgnOption):
+    def __init__(self, claims, filename, lock, live_pgn_option):
         super().__init__()
+        self.check_pgn_worker = None
         self.filename = filename
-        self.model = model
+        self.claims = claims
         self.isRunning = False
         self.lock = lock
-        self.livePgnOption = livePgnOption
+        self.live_pgn_option = live_pgn_option
 
     def run(self):
         self.isRunning = True
 
         last_size = 0
-        alreadyEntry = []
+        already_entry = []
         entries = []
 
         time.sleep(1.2)  # For synchronization purposes.
 
-        while (self.isRunning):
+        while self.isRunning:
             try:
                 size_of_pgn = os.path.getsize(self.filename)
             except FileNotFoundError:
                 size_of_pgn = 0
 
-            if (size_of_pgn != 0 and last_size != size_of_pgn):
-                self.statusSignal.emit("active")
+            if size_of_pgn != 0 and last_size != size_of_pgn:
+                self.statusSignal.emit(Status.ACTIVE)
 
-                self.checkPgnWorker = CheckPgn(self.model, self.filename, self.lock, self.livePgnOption)
-                self.checkPgnWorker.start()
+                self.check_pgn_worker = CheckPgn(self.claims, self.filename, self.lock, self.live_pgn_option)
+                self.check_pgn_worker.start()
 
                 """ While the pgn is being check here we take the entries and
-                append it to the eventTable. This create a real time update
+                append it to the eventTable. This creates a real time update
                 experience for the user when the pgn has a lot of entries """
 
-                while (self.checkPgnWorker.isAlive() or entries != alreadyEntry):
+                while self.check_pgn_worker.is_alive() or entries != already_entry:
                     time.sleep(1)
-                    entries = self.model.get_entries()
-
-                    if not (self.isRunning): break
+                    entries = self.claims.get_entries()
 
                     for entry in entries:
-                        if (entry in alreadyEntry):
+                        if entry in already_entry:
                             continue
                         else:
                             self.addEntrySignal.emit(entry)
-                            alreadyEntry.append(entry)
+                            already_entry.append(entry)
 
-                    entries = self.model.get_entries()
+                    entries = self.claims.get_entries()
 
                 last_size = size_of_pgn
-                self.statusSignal.emit("wait")
+                self.statusSignal.emit(Status.WAIT)
 
+            if not self.isRunning:
+                break
             time.sleep(4)
 
     def stop(self):
         self.isRunning = False
-        self.checkPgnWorker.stop()
-        self.checkPgnWorker.join()
+        self.check_pgn_worker.stop()
+        self.check_pgn_worker.join()
 
 
 class Stop(QThread):
@@ -183,12 +181,10 @@ class Stop(QThread):
         downloadWorker: Running thread, object of Download Class.
         makePgnWorker: Running thread, object of makePgn Class.
         scanWorker: Running thread, object of Scan Class.
-        enableSignal: Signal to update the GUI.
-        disableSignal: Signal to update the GUI.
     """
 
-    enableSignal = pyqtSignal()
-    disableSignal = pyqtSignal()
+    enableSignal = pyqtSignal()  # Signal to update the GUI.
+    disableSignal = pyqtSignal()  # Signal to update the GUI.
 
     def __init__(self, model, makePgnWorker, scanWorker, downloadWorker=None):
         super().__init__()

@@ -39,7 +39,7 @@ class SourceDialogSlots:
         downloads(dict): A dictionary containing the mappings of urls to local filepath that are valid.
     """
 
-    def __init__(self, view):
+    def __init__(self, view) -> None:
         super().__init__()
         self.view = view
 
@@ -126,7 +126,9 @@ class SourceDialogSlots:
 
         self.threadPool.waitForDone()
         self.apply_mutex_lock.release()
-        self.view.enable_ok_button()
+
+        if self.filepaths:
+            self.view.enable_ok_button()
 
     def on_exit_thread(self) -> None:
         """ Function called by Thread to perform the operations of the on_okButton_clicked."""

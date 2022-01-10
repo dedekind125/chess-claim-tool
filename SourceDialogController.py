@@ -79,3 +79,6 @@ class SourceDialogController:
 
     def get_download_list(self) -> List[str]:
         return self.dialogSlots.downloads
+
+    def has_valid_sources(self) -> bool:
+        return len(self.dialogSlots.filepaths) > 0
