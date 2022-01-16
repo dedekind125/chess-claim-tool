@@ -107,67 +107,63 @@ class Scan(QThread):
         claims: An Object of Claims Class.
         lock: The fileLock for the games.pgn between CheckPgn and MakePgn threads.
         live_pgn_option: The checkbox object on the menu.
-        isRunning(bool): True if the thread is running, false otherwise.
+        is_running(bool): True if the thread is running, false otherwise.
     """
-    addEntrySignal = pyqtSignal(list)  # Signal to update the GUI.
-    statusSignal = pyqtSignal(Status)  # Signal to update the GUI.
+    __slots__ = ["is_running", "filename", "claims", "lock", "live_pgn_option"]
+
+    add_entry_signal = pyqtSignal(tuple)  # Signal to update the GUI.
+    status_signal = pyqtSignal(Status)  # Signal to update the GUI.
+    INTERVAL = 4
 
     def __init__(self, claims, filename, lock, live_pgn_option):
         super().__init__()
-        self.check_pgn_worker = None
+        self.is_running = False
         self.filename = filename
         self.claims = claims
-        self.isRunning = False
         self.lock = lock
         self.live_pgn_option = live_pgn_option
 
     def run(self):
-        self.isRunning = True
-
+        self.is_running = True
         last_size = 0
-        already_entry = []
-        entries = []
-
         time.sleep(1.2)  # For synchronization purposes.
 
-        while self.isRunning:
+        while self.is_running:
             try:
                 size_of_pgn = os.path.getsize(self.filename)
             except FileNotFoundError:
                 size_of_pgn = 0
 
             if size_of_pgn != 0 and last_size != size_of_pgn:
-                self.statusSignal.emit(Status.ACTIVE)
+                self.status_signal.emit(Status.ACTIVE)
+                self.check_pgn()
 
-                self.check_pgn_worker = CheckPgn(self.claims, self.filename, self.lock, self.live_pgn_option)
-                self.check_pgn_worker.start()
+            self.status_signal.emit(Status.WAIT)
+            last_size = size_of_pgn
 
-                """ While the pgn is being check here we take the entries and
-                append it to the eventTable. This creates a real time update
-                experience for the user when the pgn has a lot of entries """
-
-                while self.check_pgn_worker.is_alive() or entries != already_entry:
-                    time.sleep(1)
-                    entries = self.claims.get_entries()
-
-                    for entry in entries:
-                        if entry in already_entry:
-                            continue
-                        else:
-                            self.addEntrySignal.emit(entry)
-                            already_entry.append(entry)
-
-                    entries = self.claims.get_entries()
-
-                last_size = size_of_pgn
-                self.statusSignal.emit(Status.WAIT)
-
-            if not self.isRunning:
+            if not self.is_running:
                 break
-            time.sleep(4)
+            time.sleep(self.INTERVAL)
+
+    def check_pgn(self):
+        self.lock.acquire()
+        with open(self.filename) as pgn:
+            while self.is_running:
+                game = read_game(pgn)
+                if not game:
+                    break
+                if self.live_pgn_option.isChecked() and game.headers["Result"] != "*":
+                    continue
+                if get_players(game) in self.claims.dont_check:
+                    continue
+                entries = self.claims.check_game(game)
+                for entry in entries:
+                    self.add_entry_signal.emit(entry)
+
+        self.lock.release()
 
     def stop(self):
-        self.isRunning = False
+        self.is_running = False
         self.check_pgn_worker.stop()
         self.check_pgn_worker.join()
 
@@ -178,43 +174,42 @@ class Stop(QThread):
 
     Attributes:
         model: Object of Claims Class.
-        downloadWorker: Running thread, object of Download Class.
-        makePgnWorker: Running thread, object of makePgn Class.
-        scanWorker: Running thread, object of Scan Class.
+        download_worker: Running thread, object of Download Class.
+        make_pgn_worker: Running thread, object of makePgn Class.
+        scan_worker: Running thread, object of Scan Class.
     """
 
-    enableSignal = pyqtSignal()  # Signal to update the GUI.
-    disableSignal = pyqtSignal()  # Signal to update the GUI.
+    enable_signal = pyqtSignal()  # Signal to update the GUI.
+    disable_signal = pyqtSignal()  # Signal to update the GUI.
 
-    def __init__(self, model, makePgnWorker, scanWorker, downloadWorker=None):
+    def __init__(self, model, make_pgn_worker, scan_worker, download_worker=None):
         super().__init__()
         self.model = model
-        self.downloadWorker = downloadWorker
-        self.makePgnWorker = makePgnWorker
-        self.scanWorker = scanWorker
+        self.download_worker = download_worker
+        self.make_pgn_worker = make_pgn_worker
+        self.scan_worker = scan_worker
 
     def run(self):
-        self.disableSignal.emit()
+        self.disable_signal.emit()
 
         # Stop all the treads
         try:
-            self.downloadWorker.stop()
-            self.downloadWorker.wait()
+            self.download_worker.stop()
+            self.download_worker.wait()
         except AttributeError:
             pass
         try:
-            self.makePgnWorker.stop()
-            self.scanWorker.stop()
-            self.scanWorker.wait()
-            self.makePgnWorker.join()
+            self.make_pgn_worker.stop()
+            self.scan_worker.stop()
+            self.scan_worker.wait()
+            self.make_pgn_worker.join()
         except AttributeError:
             pass
 
-        self.enableSignal.emit()
+        self.enable_signal.emit()
 
         """ Clear all the variables storing information from the model
         in order to be ready for the new scan. """
-
         self.model.empty_dont_check()
         self.model.empty_entries()
 
@@ -266,45 +261,3 @@ class MakePgn(Thread):
 
     def stop(self):
         self.is_running = False
-
-
-class CheckPgn(Thread):
-    """ Checks all the games of the pgn file.
-    Attributes:
-        filename: The path of the combined pgn file.
-        model: An Object of Claims Class.
-        lock: The fileLock for the games.pgn between CheckPgn and MakePgn threads.
-        livePgnOption: The checkbox object on the menu.
-        isRunning(bool): True if the thread is running, false otherwise.
-    """
-
-    def __init__(self, model, filename, lock, livePgnOption):
-        super().__init__()
-        self.model = model
-        self.filename = filename
-        self.lock = lock
-        self.isRunning = True
-        self.daemon = True
-        self.livePgnOption = livePgnOption
-
-    def run(self):
-        self.lock.acquire()
-
-        with open(self.filename) as pgn:
-            # Loop to go through all of the games of the pgn.
-            while self.isRunning:
-                try:
-                    game = read_game(pgn)
-                except:
-                    continue
-                if not game:  # There aren't any games left in the pgn.
-                    break
-                if self.livePgnOption.isChecked() and game.headers["Result"] != "*":
-                    continue
-                if get_players(game) in self.model.dont_check: continue
-                self.model.check_game(game)
-
-        self.lock.release()
-
-    def stop(self):
-        self.isRunning = False

@@ -185,7 +185,7 @@ class ChessClaimView(QMainWindow):
                 font.setBold(True)
                 standard_item.setFont(font)
 
-            if item == ClaimType.FIVEFOLD or item == ClaimType.SEVENTYFIVE_MOVES:
+            if item == ClaimType.FIVEFOLD.value or item == ClaimType.SEVENTYFIVE_MOVES.value:
                 standard_item.setData(QColor(255, 0, 0), Qt.ForegroundRole)
 
             row.append(standard_item)

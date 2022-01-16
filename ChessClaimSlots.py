@@ -98,7 +98,7 @@ class ChessClaimSlots:
 
         trigger: User clicks the "Stop" Button on the Main Window.
         """
-        if self.scan_worker and not self.scan_worker.isRunning:
+        if self.scan_worker and not self.scan_worker.is_running:
             return
 
         if self.download_worker:
@@ -106,8 +106,8 @@ class ChessClaimSlots:
         else:
             self.stop_worker = Stop(self.claims_model, self.make_pgn_worker, self.scan_worker)
 
-        self.stop_worker.enableSignal.connect(self.on_stop_enable_status)
-        self.stop_worker.disableSignal.connect(self.on_stop_disable_status)
+        self.stop_worker.enable_signal.connect(self.on_stop_enable_status)
+        self.stop_worker.disable_signal.connect(self.on_stop_disable_status)
         self.stop_worker.start()
 
     def on_about_clicked(self) -> None:
@@ -173,6 +173,6 @@ class ChessClaimSlots:
         filename = os.path.join(app_path, "games.pgn")
 
         self.scan_worker = Scan(self.claims_model, filename, lock, self.view.live_pgn_option)
-        self.scan_worker.addEntrySignal.connect(self.update_claims_table)
-        self.scan_worker.statusSignal.connect(self.update_bar_scan_status)
+        self.scan_worker.add_entry_signal.connect(self.update_claims_table)
+        self.scan_worker.status_signal.connect(self.update_bar_scan_status)
         self.scan_worker.start()
