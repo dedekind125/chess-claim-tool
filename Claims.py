@@ -79,7 +79,7 @@ def get_move(move_counter: int, san_move: str) -> str:
 def get_board_number(game: Any) -> str:
     try:
         return str(game.headers["Board"])
-    except:
+    except KeyError:
         return str(game.headers["Round"])
 
 
@@ -101,10 +101,10 @@ class Claims:
     """
 
     def __init__(self):
-        self.dont_check = []
-        self.entries = []
+        self.dont_check = set()
+        self.entries = set()
 
-    def check_game(self, game: Any) -> None:
+    def check_game(self, game: Any) -> set:
         """ Checks the game for 3 Fold Repetitions, 5 Fold Repetitions,
         50 Move Draw Rule and for the 75 Move Draw Rule.
         Args:
@@ -114,6 +114,7 @@ class Claims:
         board = game.board()
         players = get_players(game)
         board_number = get_board_number(game)
+        game_entries = set()
 
         # Loop to go through of all the moves of the game.
         for move in game.mainline_moves():
@@ -123,28 +124,27 @@ class Claims:
             move = get_move(move_counter, san_move)
 
             if board.is_fivefold_repetition():
-                self.entries.append([ClaimType.FIVEFOLD, board_number, players, move])
-                self.dont_check.append(players)
+                game_entries.add((ClaimType.FIVEFOLD, board_number, players, move))
+                self.dont_check.add(players)
                 break
             if board.is_seventyfive_moves():
-                self.entries.append([ClaimType.SEVENTYFIVE_MOVES, board_number, players, move])
-                self.dont_check.append(players)
+                game_entries.add((ClaimType.SEVENTYFIVE_MOVES, board_number, players, move))
+                self.dont_check.add(players)
                 break
             if board.is_fifty_moves():
-                if [ClaimType.FIFTY_MOVES, board_number, players, move] not in self.entries:
-                    self.entries.append([ClaimType.FIFTY_MOVES, board_number, players, move])
+                game_entries.add((ClaimType.FIFTY_MOVES, board_number, players, move))
             if board.is_threefold_repetition():
-                if [ClaimType.THREEFOLD, board_number, players, move] not in self.entries:
-                    self.entries.append([ClaimType.THREEFOLD, board_number, players, move])
+                game_entries.add((ClaimType.THREEFOLD, board_number, players, move))
 
-    def get_entries(self) -> list:
-        return self.entries
+        game_entries = game_entries - self.entries
+        self.entries.update(game_entries)
+        return game_entries
 
     def empty_dont_check(self) -> None:
-        self.dont_check = []
+        self.dont_check.clear()
 
     def empty_entries(self) -> None:
-        self.entries = []
+        self.entries.clear()
 
 
 class ClaimType(Enum):
