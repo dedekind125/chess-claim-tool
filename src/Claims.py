@@ -90,8 +90,7 @@ def get_players(game: Any) -> str:
 
 
 class Claims:
-    """ Provides the methods to read and scan a game for any type of draw claim.
-
+    """
     Attributes:
         dont_check(list): Is a list of player's names who's their game shall not
         be checked again. This list is used for games that a 5 Fold Repetition

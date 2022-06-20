@@ -19,10 +19,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import sys, os.path
 from PyQt5.QtWidgets import QApplication
-from ChessClaimView import ChessClaimView
-from ChessClaimSlots import ChessClaimSlots
-from Claims import Claims
-from helpers import get_appdata_path
+from src.views.ChessClaimView import ChessClaimView
+from src.controllers.ChessClaimSlots import ChessClaimSlots
+from src.Claims import Claims
+from src.helpers import get_appdata_path
 
 
 class ChessClaimController(QApplication):
@@ -30,7 +30,7 @@ class ChessClaimController(QApplication):
 
     Attributes:
         model: Object of the Claims Class.
-        view: The main view(GUI) of the application.
+        view: The main views(GUI) of the application.
     """
     __slots__ = ["slots", "view", "model"]
 

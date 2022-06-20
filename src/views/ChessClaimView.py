@@ -26,11 +26,11 @@ from PyQt5.QtWidgets import (QMainWindow, QWidget, QTreeView, QPushButton, QDesk
                              QAbstractItemView, QHBoxLayout, QVBoxLayout, QLabel, QStatusBar, QMessageBox, QAction,
                              QDialog)
 
-from Claims import ClaimType
-from helpers import resource_path, Status
+from src.Claims import ClaimType
+from src.helpers import resource_path, Status
 
 if platform.system() == "Darwin":
-    from MacNotification import Notification as Notification
+    from src.MacNotification import Notification as Notification
 elif platform.system() == "Windows":
     from win10toast import ToastNotifier as Notification
 
@@ -160,14 +160,14 @@ class ChessClaimView(QMainWindow):
         """ Connect the Slots """
         self.slots = slots
 
-    def add_to_table(self, entry: list) -> None:
+    def add_item_to_table(self, entry: list) -> None:
         """ Add new row to the claimsTable
         Args:
 
         """
         claim_type, board_number, players, move = entry[:4]
 
-        self.remove_rows(claim_type, players)
+        self.remove_rows_by_claim_type(claim_type, players)
 
         timestamp = str(datetime.now().strftime('%H:%M:%S'))
         row = []
@@ -177,26 +177,30 @@ class ChessClaimView(QMainWindow):
         """ Convert each item(str) to QStandardItem, make the necessary stylistic
         additions and append it to row."""
         for idx, item in enumerate(items):
-            standard_item = QStandardItem(item)
-            standard_item.setTextAlignment(Qt.AlignCenter)
-
-            if idx == 2:
-                font = standard_item.font()
-                font.setBold(True)
-                standard_item.setFont(font)
-
-            if item == ClaimType.FIVEFOLD.value or item == ClaimType.SEVENTYFIVE_MOVES.value:
-                standard_item.setData(QColor(255, 0, 0), Qt.ForegroundRole)
-
+            standard_item = self.create_standard_item(item, idx)
             row.append(standard_item)
 
         self.claims_table_model.appendRow(row)
-
         self.resize_claims_table()
 
         # Always the last row(the bottom of the table) should be visible.
         self.claims_table.scrollToBottom()
         self.notify(claim_type, players, move)
+
+    @staticmethod
+    def create_standard_item(item: list, idx: int) -> QStandardItem:
+        item = QStandardItem(item)
+        item.setTextAlignment(Qt.AlignCenter)
+
+        if idx == 2:
+            font = item.font()
+            font.setBold(True)
+            item.setFont(font)
+
+        if item == ClaimType.FIVEFOLD.value or item == ClaimType.SEVENTYFIVE_MOVES.value:
+            item.setData(QColor(255, 0, 0), Qt.ForegroundRole)
+
+        return item
 
     def notify(self, claim_type: ClaimType, players: str, move: str) -> None:
         """ Send notification depending on the OS.
@@ -216,20 +220,20 @@ class ChessClaimView(QMainWindow):
                                          duration=5,
                                          threaded=True)
 
-    def remove_from_table(self, index: int):
+    def remove_row_by_index(self, index: int) -> None:
         """ Remove element from the claimsTable.
         Args:
             index: The index of the row we want to remove. First row has index=0.
         """
         self.claims_table_model.removeRow(index)
 
-    def remove_rows(self, claim_type: ClaimType, players: str) -> None:
+    def remove_rows_by_claim_type(self, claim_type: ClaimType, players: str) -> None:
         """ Removes a existing row from the Claims Table when same players made
-        the same type of draw with a new move - or they made 5 Fold Repetition
-        over the 3 Fold or 75 Moves Rule over 50 moves Rule.
+        the same type of draw with a new move - or they made 5-Fold Repetition
+        over the 3-Fold or 75 Moves Rule over 50 moves Rule.
 
         Args:
-            claim_type: The type of the draw (3 Fold Repetition, 5 Fold Repetition,
+            claim_type: The type of the draw (3-Fold Repetition, 5-Fold Repetition,
                                         50 Moves Rule, 75 Moves Rule).
             players: The names of the players.
         """
@@ -242,19 +246,19 @@ class ChessClaimView(QMainWindow):
                 model_players = ""
 
             if model_type == claim_type.value and model_players == players:
-                self.remove_from_table(index)
+                self.remove_row_by_index(index)
                 self.reset_column_count()
                 break
             elif (claim_type is ClaimType.FIVEFOLD and
                   model_type == ClaimType.THREEFOLD.value and
                   model_players == players):
-                self.remove_from_table(index)
+                self.remove_row_by_index(index)
                 self.reset_column_count()
                 break
             elif (claim_type is ClaimType.SEVENTYFIVE_MOVES and
                   model_type == ClaimType.FIFTY_MOVES.value and
                   model_players == players):
-                self.remove_from_table(index)
+                self.remove_row_by_index(index)
                 self.reset_column_count()
                 break
 

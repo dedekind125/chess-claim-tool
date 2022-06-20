@@ -24,7 +24,7 @@ from PyQt5.QtGui import QIcon, QPixmap
 from PyQt5.QtWidgets import (QDialog, QWidget, QComboBox, QLineEdit, QPushButton,
                              QLabel, QHBoxLayout, QVBoxLayout, QFileDialog)
 
-from helpers import resource_path, Status
+from src.helpers import resource_path, Status
 
 
 class AddSourceDialog(QDialog):

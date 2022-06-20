@@ -21,16 +21,16 @@ import json
 import os.path
 from typing import List
 
-from SourceDialogSlots import SourceDialogSlots
-from SourceDialogView import SourceHBox
-from helpers import get_appdata_path
+from src.controllers.SourceDialogSlots import SourceDialogSlots
+from src.views.SourceDialogView import SourceHBox
+from src.helpers import get_appdata_path
 
 
 class SourceDialogController:
     """ The Controller of sources Dialog.
 
     Attributes:
-        view: The view(GUI) of the dialog.
+        view: The views(GUI) of the dialog.
     """
     __slots__ = ['dialogSlots', 'view']
 

@@ -21,22 +21,22 @@ import os.path
 from threading import Lock
 from typing import List
 
-from ChessClaimView import sources_warning, ChessClaimView
-from Claims import Claims
-from SourceDialogController import SourceDialogController
-from SourceDialogView import AddSourceDialog
-from helpers import get_appdata_path, Status
-from workers import DownloadGames, MakePgn, Scan, Stop
+from src.views.ChessClaimView import sources_warning, ChessClaimView
+from src.Claims import Claims
+from src.controllers.SourceDialogController import SourceDialogController
+from src.views.SourceDialogView import AddSourceDialog
+from src.helpers import get_appdata_path, Status
+from src.workers import DownloadGames, MakePgn, Scan, Stop
 
 
 class ChessClaimSlots:
     """ Handles user interaction with the GUI of the Main Window. Each function
     is called when a specific action is performed by the user, to fulfill
-    the request that corresponds to that action model and view wise.
+    the request that corresponds to that action model and views wise.
 
     Attributes:
         model: Object of the Claims class.
-        view:  The view of the Main Window.
+        view:  The views of the Main Window.
     """
 
     def __init__(self, model: Claims, view: ChessClaimView) -> None:
@@ -111,7 +111,7 @@ class ChessClaimSlots:
         self.stop_worker.start()
 
     def on_about_clicked(self) -> None:
-        """ Calls the view in order to display the About Dialog.
+        """ Calls the views in order to display the About Dialog.
         trigger: User clicked the About section in the menu.
         """
         self.view.load_about_dialog()
@@ -148,7 +148,7 @@ class ChessClaimSlots:
             self.view.set_sources_status(Status.ERROR)
 
     def update_claims_table(self, entry: list) -> None:
-        self.view.add_to_table(entry)
+        self.view.add_item_to_table(entry)
 
     def update_download_status(self, status: Status) -> None:
         self.view.set_download_status(status)

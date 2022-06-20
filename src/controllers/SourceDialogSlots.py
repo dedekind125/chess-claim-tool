@@ -22,9 +22,9 @@ import json
 from threading import Thread, Lock
 from PyQt5.QtCore import QThreadPool
 
-from SourceDialogView import SourceHBox
-from workers import CheckDownload, DownloadGames, MakePgn
-from helpers import get_appdata_path, Status
+from src.views.SourceDialogView import SourceHBox
+from src.workers import CheckDownload, DownloadGames, MakePgn
+from src.helpers import get_appdata_path, Status
 
 
 class SourceDialogSlots:
@@ -33,7 +33,7 @@ class SourceDialogSlots:
     the request that corresponds to that action.
 
     Attributes:
-        view:  The view of the Source Dialog.
+        view:  The views of the Source Dialog.
         app_path(str): The path where the application will store & fetch data.
         filepaths(list[str]): A list that contains local files paths (from local and url sources) which are valid.
         downloads(dict): A dictionary containing the mappings of urls to local filepath that are valid.

@@ -23,9 +23,9 @@ from threading import Thread
 from PyQt5.QtCore import QRunnable, QThread, pyqtSignal
 from chess.pgn import read_game
 
-from Claims import get_players
-from DownloadPgn import check_download, download_pgn
-from helpers import get_appdata_path, Status
+from src.Claims import get_players
+from src.DownloadPgn import check_download, download_pgn
+from src.helpers import get_appdata_path, Status
 
 
 class CheckDownload(QRunnable):
@@ -76,13 +76,11 @@ class DownloadGames(QThread):
         while self.is_running:
             for url in self.downloads:
                 status = Status.OK
-
                 data = download_pgn(url)
                 if not data:
                     status = Status.ERROR
 
                 self.status_signal.emit(status)
-
                 filename = self.downloads[url]
                 try:
                     with open(filename, "wb") as file:
@@ -111,8 +109,8 @@ class Scan(QThread):
     """
     __slots__ = ["is_running", "filename", "claims", "lock", "live_pgn_option"]
 
-    add_entry_signal = pyqtSignal(tuple)  # Signal to update the GUI.
-    status_signal = pyqtSignal(Status)  # Signal to update the GUI.
+    add_entry_signal = pyqtSignal(tuple)    # Signal to update the GUI.
+    status_signal = pyqtSignal(Status)      # Signal to update the GUI.
     INTERVAL = 4
 
     def __init__(self, claims, filename, lock, live_pgn_option):
@@ -134,7 +132,7 @@ class Scan(QThread):
             except FileNotFoundError:
                 size_of_pgn = 0
 
-            if size_of_pgn != 0 and last_size != size_of_pgn:
+            if self.is_file_updated(last_size, size_of_pgn):
                 self.status_signal.emit(Status.ACTIVE)
                 self.check_pgn()
 
@@ -162,10 +160,12 @@ class Scan(QThread):
 
         self.lock.release()
 
+    @staticmethod
+    def is_file_updated(last_size, current_size):
+        return current_size != 0 and last_size != current_size
+
     def stop(self):
         self.is_running = False
-        self.check_pgn_worker.stop()
-        self.check_pgn_worker.join()
 
 
 class Stop(QThread):

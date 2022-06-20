@@ -35,7 +35,7 @@ def resource_path(relative_path: str) -> str:
         if relative_path.endswith(".css"):
             base_path = os.path.abspath(".")
         else:
-            base_path = os.path.join(os.path.abspath("."), "icons")
+            base_path = os.path.abspath("icons")
 
     return os.path.join(base_path, relative_path)
 
