@@ -61,28 +61,6 @@ chess.Board.is_threefold_repetition = is_threefold_repetition
 chess.Board.is_fifty_moves = is_fifty_moves
 
 
-def get_move(move_counter: int, san_move: str) -> str:
-    """ Returns: The move as it's been displayed in the claimsTable.
-    Args:
-        move_counter: The number of the moves played in the game.
-        san_move: The SAN representation of the move
-    """
-    move_num = ceil(move_counter / 2)
-
-    if move_counter % 2 == 0:
-        move = f"{move_num}...{san_move}"
-    else:
-        move = f"{move_num}.{san_move}"
-    return move
-
-
-def get_board_number(game: Any) -> str:
-    try:
-        return str(game.headers["Board"])
-    except KeyError:
-        return str(game.headers["Round"])
-
-
 def get_players(game: Any) -> str:
     white = game.headers["White"][:22]
     black = game.headers["Black"][:22]
@@ -112,7 +90,7 @@ class Claims:
         move_counter = 0
         board = game.board()
         players = get_players(game)
-        board_number = get_board_number(game)
+        board_number = self.get_board_number(game)
         game_entries = set()
 
         # Loop to go through of all the moves of the game.
@@ -120,7 +98,7 @@ class Claims:
             san_move = str(board.san(move))
             board.push(move)
             move_counter += 1
-            move = get_move(move_counter, san_move)
+            move = self.get_move(move_counter, san_move)
 
             if board.is_fivefold_repetition():
                 game_entries.add((ClaimType.FIVEFOLD, board_number, players, move))
@@ -144,6 +122,28 @@ class Claims:
 
     def empty_entries(self) -> None:
         self.entries.clear()
+
+    @staticmethod
+    def get_move(move_counter: int, san_move: str) -> str:
+        """ Returns: The move as it's been displayed in the claimsTable.
+        Args:
+            move_counter: The number of the moves played in the game.
+            san_move: The SAN representation of the move
+        """
+        move_num = ceil(move_counter / 2)
+
+        if move_counter % 2 == 0:
+            move = f"{move_num}...{san_move}"
+        else:
+            move = f"{move_num}.{san_move}"
+        return move
+
+    @staticmethod
+    def get_board_number(game: Any) -> str:
+        try:
+            return str(game.headers["Board"])
+        except KeyError:
+            return str(game.headers["Round"])
 
 
 class ClaimType(Enum):
