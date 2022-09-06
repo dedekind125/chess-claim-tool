@@ -18,6 +18,13 @@ This will be especially useful for tournaments where the games are recorded with
 
 The program is meant to work using either local pgn files and/or pgn files from the web. This means that is an independent tool from the live game's operator, and can be used like football VAR by the arbiters.
 
+# Disclaimer
+
+This tool is **not** officially approved by FIDE. The arbiter can consult the tool, but should always act as the FIDE Laws of chess mandate when a claim is made.
+
+### Tool Accuracy
+The tool uses the [python-chess](https://github.com/niklasf/python-chess) external library to detect possible claims. The accuracy of the tool should be 100%. Until now, there are no reports of missed or incorrect claims made by the tool.
+
 # Operating System
 
 This version is compatible with the macOS and Windows.
@@ -31,7 +38,7 @@ This version is compatible with the macOS and Windows.
 ```
 pip install pyqt5
 ```
-* [python-chess ](https://github.com/niklasf/python-chess)by Niklas Fiekas  
+* [python-chess](https://github.com/niklasf/python-chess)by Niklas Fiekas  
 ```
 pip install python-chess
 ```
@@ -50,11 +57,6 @@ $ python main.py
 Here is how the GUI looks like (on macOS) while the program is running:
 
 <img src="./screenshots/action.png" width="50%"/>
-
-
-
-
-
 
 
 ## License
