@@ -29,7 +29,7 @@ from src.helpers import get_appdata_path, Status
 from src.workers import DownloadGames, MakePgn, Scan, Stop
 
 
-class ChessClaimSlots:
+class ChessClaimCallbacks:
     """ Handles user interaction with the GUI of the Main Window. Each function
     is called when a specific action is performed by the user, to fulfill
     the request that corresponds to that action model and views wise.
@@ -102,9 +102,11 @@ class ChessClaimSlots:
             return
 
         if self.download_worker:
-            self.stop_worker = Stop(self.claims_model, self.make_pgn_worker, self.scan_worker, self.download_worker)
+            self.stop_worker = Stop(
+                self.claims_model, self.make_pgn_worker, self.scan_worker, self.download_worker)
         else:
-            self.stop_worker = Stop(self.claims_model, self.make_pgn_worker, self.scan_worker)
+            self.stop_worker = Stop(
+                self.claims_model, self.make_pgn_worker, self.scan_worker)
 
         self.stop_worker.enable_signal.connect(self.on_stop_enable_status)
         self.stop_worker.disable_signal.connect(self.on_stop_disable_status)
@@ -172,7 +174,8 @@ class ChessClaimSlots:
         app_path = get_appdata_path()
         filename = os.path.join(app_path, "games.pgn")
 
-        self.scan_worker = Scan(self.claims_model, filename, lock, self.view.live_pgn_option)
+        self.scan_worker = Scan(
+            self.claims_model, filename, lock, self.view.live_pgn_option)
         self.scan_worker.add_entry_signal.connect(self.update_claims_table)
         self.scan_worker.status_signal.connect(self.update_bar_scan_status)
         self.scan_worker.start()

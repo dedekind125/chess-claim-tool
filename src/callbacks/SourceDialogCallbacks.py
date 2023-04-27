@@ -27,7 +27,7 @@ from src.workers import CheckDownload, DownloadGames, MakePgn
 from src.helpers import get_appdata_path, Status
 
 
-class SourceDialogSlots:
+class SourceDialogCallbacks:
     """ Handles user interaction with the GUI of the dialog. Each function
     is called when a specific action is performed by the user, to fulfill
     the request that corresponds to that action.
@@ -113,7 +113,8 @@ class SourceDialogSlots:
         download_id = 0
         for source_hbox in self.view.sources:
             if source_hbox.has_url():
-                self.threadPool.start(CheckDownload(self, source_hbox, download_id))
+                self.threadPool.start(CheckDownload(
+                    self, source_hbox, download_id))
                 download_id += 1
             elif source_hbox.has_local():
                 filepath = source_hbox.get_value()
@@ -147,7 +148,8 @@ class SourceDialogSlots:
 
     def save_sources(self) -> None:
         """ Saves the valid sources to the JSON file """
-        data = [{"option": source.get_source_index(), "value": source.get_value()} for source in self.view.sources]
+        data = [{"option": source.get_source_index(), "value": source.get_value()}
+                for source in self.view.sources]
         with open(os.path.join(self.app_path, 'sources.json'), 'w') as file:
             json.dump(data, file, indent=4)
 

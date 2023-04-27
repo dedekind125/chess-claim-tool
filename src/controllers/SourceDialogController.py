@@ -21,7 +21,7 @@ import json
 import os.path
 from typing import List
 
-from src.controllers.SourceDialogSlots import SourceDialogSlots
+from src.callbacks.SourceDialogCallbacks import SourceDialogCallbacks
 from src.views.SourceDialogView import SourceHBox
 from src.helpers import get_appdata_path
 
@@ -32,10 +32,10 @@ class SourceDialogController:
     Attributes:
         view: The views(GUI) of the dialog.
     """
-    __slots__ = ['dialogSlots', 'view']
+    __slots__ = ['dialogCallbacks', 'view']
 
     def __init__(self) -> None:
-        self.dialogSlots = None
+        self.dialogCallbacks = None
         self.view = None
 
     def set_view(self, view) -> None:
@@ -43,14 +43,34 @@ class SourceDialogController:
 
     def do_start(self) -> None:
         """ Perform startup operations and shows the dialog.
-        Called once, on dialog startup."""
+        Called once, on dialog startup.
+        """
+        self.dialogCallbacks = SourceDialogCallbacks(self.view)
 
-        self.dialogSlots = SourceDialogSlots(self.view)
-        self.view.set_slots(self.dialogSlots)
-
+        self.view.set_callback(self.dialogCallbacks)
         self.view.set_gui()
+        self.restore()
+        self.view.show()
 
-        # Load values from JSON
+    def do_resume(self) -> None:
+        """ Shows the dialog from the previous state the user left itself.
+        That means that do_start has been preceded.
+        """
+        self.view.show()
+
+    def get_filepath_list(self) -> List[str]:
+        return self.dialogCallbacks.filepaths
+
+    def get_valid_sources(self) -> List[SourceHBox]:
+        return self.view.sources
+
+    def get_download_list(self) -> List[str]:
+        return self.dialogCallbacks.downloads
+
+    def has_valid_sources(self) -> bool:
+        return len(self.dialogCallbacks.filepaths) > 0
+
+    def restore(self) -> None:
         app_path = get_appdata_path()
         try:
             with open(os.path.join(app_path, "sources.json"), "r") as file:
@@ -63,22 +83,3 @@ class SourceDialogController:
             self.view.add_default_source()
         except FileNotFoundError:
             self.view.add_default_source()
-
-        self.view.show()
-
-    def do_resume(self) -> None:
-        """ Shows the dialog from the previous state the user left itself.
-        That means that do_start has been preceded."""
-        self.view.show()
-
-    def get_filepath_list(self) -> List[str]:
-        return self.dialogSlots.filepaths
-
-    def get_valid_sources(self) -> List[SourceHBox]:
-        return self.view.sources
-
-    def get_download_list(self) -> List[str]:
-        return self.dialogSlots.downloads
-
-    def has_valid_sources(self) -> bool:
-        return len(self.dialogSlots.filepaths) > 0

@@ -34,7 +34,7 @@ class AddSourceDialog(QDialog):
         sources_cnt(int): The number of the sources in the dialog.
     """
     ICON_SIZE = 20
-    __slots__ = ['slots', 'layout', 'bottomBox', 'sources', 'source_cnt']
+    __callback__ = ['callback', 'layout', 'bottomBox', 'sources', 'source_cnt']
 
     def __init__(self) -> None:
         super().__init__()
@@ -45,7 +45,7 @@ class AddSourceDialog(QDialog):
 
         self.setWindowFlags(self.windowFlags() ^ Qt.WindowContextHelpButtonHint)
 
-        self.slots = None
+        self.callback = None
         self.layout = None
         self.bottomBox = None
         self.sources = []
@@ -94,8 +94,8 @@ class AddSourceDialog(QDialog):
     def add_default_source(self) -> None:
         self.add_source(0, "")
 
-    def set_slots(self, slots) -> None:
-        self.slots = slots
+    def set_callback(self, callback) -> None:
+        self.callback = callback
 
     def enable_ok_button(self) -> None:
         self.bottomBox.change_ok_status(True)
@@ -120,7 +120,7 @@ class SourceHBox(QWidget):
     Attributes:
         dialog: The Source Dialog with the Horizontal Box is located on.
     """
-    __slots__ = ['dialog', 'select_source', 'source_value', 'choose_button', 'status_image', 'ok_pixmap',
+    __callback__ = ['dialog', 'select_source', 'source_value', 'choose_button', 'status_image', 'ok_pixmap',
                  'error_pixmap']
 
     def __init__(self, dialog: AddSourceDialog) -> None:
@@ -152,7 +152,7 @@ class SourceHBox(QWidget):
         delete_button.setIcon(QIcon(resource_path("delete_icon.png")))
         delete_button.setIconSize(QSize(self.dialog.ICON_SIZE, self.dialog.ICON_SIZE))
         delete_button.setObjectName('DeleteSource')
-        delete_button.clicked.connect(partial(self.dialog.slots.on_delete_button_clicked, self))
+        delete_button.clicked.connect(partial(self.dialog.callback.on_delete_button_clicked, self))
 
         # Add all the above elements to layout.
         layout = QHBoxLayout()
@@ -238,11 +238,11 @@ class BottomBox(QWidget):
 
         # Create the Apply and Ok Buttons.
         apply_button = QPushButton("Apply")
-        self.ok_button = QPushButton("ΟΚ")
+        self.ok_button = QPushButton("OK")
         apply_button.setObjectName("apply")
         self.ok_button.setObjectName("ok")
-        apply_button.clicked.connect(self.dialog.slots.on_apply_button_clicked)
-        self.ok_button.clicked.connect(self.dialog.slots.on_ok_button_clicked)
+        apply_button.clicked.connect(self.dialog.callback.on_apply_button_clicked)
+        self.ok_button.clicked.connect(self.dialog.callback.on_ok_button_clicked)
         self.ok_button.setEnabled(False)
 
         # Add all the above elements to layout.

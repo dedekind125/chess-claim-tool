@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import sys, os.path
 from PyQt5.QtWidgets import QApplication
 from src.views.ChessClaimView import ChessClaimView
-from src.controllers.ChessClaimSlots import ChessClaimSlots
+from src.callbacks.ChessClaimCallbacks import ChessClaimCallbacks
 from src.Claims import Claims
 from src.helpers import get_appdata_path
 
@@ -32,11 +32,11 @@ class ChessClaimController(QApplication):
         model: Object of the Claims Class.
         view: The main views(GUI) of the application.
     """
-    __slots__ = ["slots", "view", "model"]
+    __callbacks__ = ["callbacks", "view", "model"]
 
     def __init__(self) -> None:
         super().__init__(sys.argv)
-        self.slots = None
+        self.callbacks = None
         self.view = None
         self.model = Claims()
 
@@ -51,8 +51,8 @@ class ChessClaimController(QApplication):
         if not os.path.exists(app_path):
             os.makedirs(app_path)
 
-        self.slots = ChessClaimSlots(self.model, self.view)
-        self.view.set_slots(self.slots)
+        self.callbacks = ChessClaimCallbacks(self.model, self.view)
+        self.view.set_callbacks(self.callbacks)
 
         self.view.set_gui()
         self.view.show()
