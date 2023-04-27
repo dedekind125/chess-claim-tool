@@ -41,7 +41,8 @@ def sources_warning():
     warning_dialog.setIcon(warning_dialog.Warning)
     warning_dialog.setWindowTitle("Warning")
     warning_dialog.setText("PGN File(s) Not Found")
-    warning_dialog.setInformativeText("Please enter at least one valid PGN source.")
+    warning_dialog.setInformativeText(
+        "Please enter at least one valid PGN source.")
     warning_dialog.exec()
 
 
@@ -81,7 +82,8 @@ class ChessClaimView(QMainWindow):
         """ Centers the window on the screen """
         screen = QDesktopWidget().screenGeometry()
         size = self.geometry()
-        self.move((screen.width() - size.width()) / 2, (screen.height() - size.height()) / 2)
+        self.move(int((screen.width() - size.width()) / 2),
+                  int((screen.height() - size.height()) / 2))
 
     def set_gui(self) -> None:
         """ Initialize GUI components. """
@@ -90,8 +92,10 @@ class ChessClaimView(QMainWindow):
         self.create_claims_table()
         self.create_status_bar()
 
-        self.button_box.set_scan_button_callback(self.slots.on_scan_button_clicked)
-        self.button_box.set_stop_button_callback(self.slots.on_stop_button_clicked)
+        self.button_box.set_scan_button_callback(
+            self.slots.on_scan_button_clicked)
+        self.button_box.set_stop_button_callback(
+            self.slots.on_stop_button_clicked)
 
         container_layout = QVBoxLayout()
         container_layout.setSpacing(0)
@@ -172,7 +176,8 @@ class ChessClaimView(QMainWindow):
         timestamp = str(datetime.now().strftime('%H:%M:%S'))
         row = []
         count = str(self.claims_table_model.rowCount() + 1)
-        items = [count, timestamp, claim_type.value, board_number, players, move]
+        items = [count, timestamp, claim_type.value,
+                 board_number, players, move]
 
         """ Convert each item(str) to QStandardItem, make the necessary stylistic
         additions and append it to row."""
@@ -393,7 +398,8 @@ class ChessClaimView(QMainWindow):
                 exit_dialog.setText("Scanning in Progress")
                 exit_dialog.setInformativeText("Do you want to quit?")
                 exit_dialog.setIcon(exit_dialog.Warning)
-                exit_dialog.setStandardButtons(QMessageBox.Yes | QMessageBox.Cancel)
+                exit_dialog.setStandardButtons(
+                    QMessageBox.Yes | QMessageBox.Cancel)
                 exit_dialog.setDefaultButton(QMessageBox.Cancel)
                 replay = exit_dialog.exec()
 
@@ -449,7 +455,8 @@ class AboutDialog(QDialog):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("About")
-        self.setWindowFlags(self.windowFlags() ^ Qt.WindowContextHelpButtonHint)
+        self.setWindowFlags(self.windowFlags() ^
+                            Qt.WindowContextHelpButtonHint)
 
     def set_gui(self) -> None:
         """ Initialize GUI components. """
