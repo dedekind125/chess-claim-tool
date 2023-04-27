@@ -20,7 +20,13 @@ class Notification():
         self.center.removeAllDeliveredNotifications()
 
     def notify(self,title,subtitle,text):
-        "Set notification details and send the notification"
+        """ Sets notification details and send the notification to the
+        notification center.
+        Args:
+            title: The title of the notification.
+            subtitle: The subtitle of the notification.
+            text: The informative text of the notification.
+        """
         self.notification.setTitle_(title)
         self.notification.setSubtitle_(subtitle)
         self.notification.setInformativeText_(text)

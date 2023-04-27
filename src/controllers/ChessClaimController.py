@@ -19,41 +19,40 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import sys, os.path
 from PyQt5.QtWidgets import QApplication
-from ChessClaimView import ChessClaimView
-from ChessClaimSlots import ChessClaimSlots
-from Claims import Claims
-from helpers import get_appData_path
+from src.views.ChessClaimView import ChessClaimView
+from src.controllers.ChessClaimSlots import ChessClaimSlots
+from src.Claims import Claims
+from src.helpers import get_appdata_path
+
 
 class ChessClaimController(QApplication):
     """ The Controller of the whole application.
 
     Attributes:
         model: Object of the Claims Class.
-        view: The main view(GUI) of the application.
+        view: The main views(GUI) of the application.
     """
-    def __init__(self):
+    __slots__ = ["slots", "view", "model"]
+
+    def __init__(self) -> None:
         super().__init__(sys.argv)
+        self.slots = None
+        self.view = None
         self.model = Claims()
 
-    def set_view(self,view):
+    def set_view(self, view: ChessClaimView):
         self.view = view
 
-    def do_start(self):
-
+    def do_start(self) -> None:
         """ Perform startup operations and shows the dialog.
         Called once, on application startup. """
 
-        appPath = get_appData_path()
+        app_path = get_appdata_path()
+        if not os.path.exists(app_path):
+            os.makedirs(app_path)
 
-        # Set up application directory
-        if not os.path.exists(appPath): os.makedirs(appPath)
-
-        #Connect the signals from the View to the Slots
-        self.slots = ChessClaimSlots(self.model,self.view)
+        self.slots = ChessClaimSlots(self.model, self.view)
         self.view.set_slots(self.slots)
 
-        # Initialize the GUI
-        self.view.set_GUI()
-
-        # Show the GUI
+        self.view.set_gui()
         self.view.show()

@@ -1,7 +1,7 @@
 """
 Chess Claim Tool
 
-Copyright (C) 2019 Serntedakis Athanasios <thanasis@brainfriz.com>
+Copyright (C) 2022 Serntedakis Athanasios <thanserd@hotmail.com>
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -17,12 +17,12 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 import sys
-from ChessClaimController import ChessClaimController
-from ChessClaimView import ChessClaimView
+from src.controllers.ChessClaimController import ChessClaimController
+from src.views.ChessClaimView import ChessClaimView
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon
-from helpers import resource_path
+from src.helpers import resource_path
 
 if __name__ == '__main__':
     QApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)
@@ -31,10 +31,9 @@ if __name__ == '__main__':
     app.setStyle('fusion')
     app.setWindowIcon(QIcon(resource_path("logo.png")))
 
-    """Load the CSS file for the application"""
-    css = "main.css"
-    with open(resource_path(css), 'r') as myfile:
-        css = myfile.read().replace('\n', '')
+    css_path = "src/views/main.css"
+    with open(resource_path(css_path), 'r') as css_file:
+        css = css_file.read().replace('\n', '')
     app.setStyleSheet(css)
 
     view = ChessClaimView()
