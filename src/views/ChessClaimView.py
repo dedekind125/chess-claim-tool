@@ -30,9 +30,9 @@ from src.Claims import ClaimType
 from src.helpers import resource_path, Status
 
 if platform.system() == "Darwin":
-    from src.MacNotification import Notification as Notification
+    from src.MacNotification import Notification
 elif platform.system() == "Windows":
-    from win10toast import ToastNotifier as Notification
+    from windows_toasts import WindowsToaster, ToastImageAndText2, ToastDisplayImage, ToastDuration
 
 
 def sources_warning():
@@ -76,7 +76,10 @@ class ChessClaimView(QMainWindow):
         self.status_bar = QStatusBar()
         self.about_dialog = AboutDialog()
 
-        self.notification = Notification()
+        if platform.system() == "Darwin":
+            self.notification = Notification()
+        elif platform.system() == "Windows":
+            self.notification = WindowsToaster("Chess Claim Tool")
 
     def center(self) -> None:
         """ Centers the window on the screen """
@@ -220,11 +223,14 @@ class ChessClaimView(QMainWindow):
             self.notification.clearNotifications()
             self.notification.notify(claim_type.value, players, move)
         elif platform.system() == "Windows":
-            self.notification.show_toast(claim_type.value,
-                                         f"{players} \n {move}",
-                                         icon_path=resource_path("logo.ico"),
-                                         duration=5,
-                                         threaded=True)
+            newToast = ToastImageAndText2()
+            newToast.SetHeadline(claim_type.value)
+            newToast.SetBody(f"{players} \n{move}")
+            newToast.AddImage(ToastDisplayImage.fromPath(
+                resource_path("logo.ico")))
+            newToast.SetDuration(ToastDuration("short"))
+
+            self.notification.show_toast(newToast)
 
     def remove_row_by_index(self, index: int) -> None:
         """ Remove element from the claimsTable.

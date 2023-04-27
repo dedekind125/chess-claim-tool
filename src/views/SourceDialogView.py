@@ -43,7 +43,8 @@ class AddSourceDialog(QDialog):
         self.resize(420, 100)
         self.setWindowTitle("PGN Sources")
 
-        self.setWindowFlags(self.windowFlags() ^ Qt.WindowContextHelpButtonHint)
+        self.setWindowFlags(self.windowFlags() ^
+                            Qt.WindowContextHelpButtonHint)
 
         self.callback = None
         self.layout = None
@@ -60,7 +61,8 @@ class AddSourceDialog(QDialog):
         # Create the Add New Source Icon.
         add_source_button = QPushButton("")
         add_source_button.setIcon(QIcon(resource_path("add_icon.png")))
-        add_source_button.setIconSize(QSize(self.ICON_SIZE + 4, self.ICON_SIZE + 4))
+        add_source_button.setIconSize(
+            QSize(self.ICON_SIZE + 4, self.ICON_SIZE + 4))
         add_source_button.setObjectName('AddSource')
         add_source_button.clicked.connect(self.on_add_source_button_clicked)
 
@@ -121,7 +123,7 @@ class SourceHBox(QWidget):
         dialog: The Source Dialog with the Horizontal Box is located on.
     """
     __callback__ = ['dialog', 'select_source', 'source_value', 'choose_button', 'status_image', 'ok_pixmap',
-                 'error_pixmap']
+                    'error_pixmap']
 
     def __init__(self, dialog: AddSourceDialog) -> None:
         super().__init__()
@@ -135,7 +137,8 @@ class SourceHBox(QWidget):
         # Create the Line Edit for user input.
         self.source_value = QLineEdit()
         self.source_value.textChanged.connect(self.line_edit_changed)
-        self.source_value.setPlaceholderText("https://example.com/pgn/games.pgn")
+        self.source_value.setPlaceholderText(
+            "https://example.com/pgn/games.pgn")
 
         # Choose File Button in case of the Local File Option
         self.choose_button = QPushButton("Choose File")
@@ -150,9 +153,11 @@ class SourceHBox(QWidget):
         # Create the Delete Button
         delete_button = QPushButton("")
         delete_button.setIcon(QIcon(resource_path("delete_icon.png")))
-        delete_button.setIconSize(QSize(self.dialog.ICON_SIZE, self.dialog.ICON_SIZE))
+        delete_button.setIconSize(
+            QSize(self.dialog.ICON_SIZE, self.dialog.ICON_SIZE))
         delete_button.setObjectName('DeleteSource')
-        delete_button.clicked.connect(partial(self.dialog.callback.on_delete_button_clicked, self))
+        delete_button.clicked.connect(
+            partial(self.dialog.callback.on_delete_button_clicked, self))
 
         # Add all the above elements to layout.
         layout = QHBoxLayout()
@@ -196,7 +201,8 @@ class SourceHBox(QWidget):
         if index == 0:  # Web download option
             self.choose_button.setHidden(True)
             self.source_value.setText("")
-            self.source_value.setPlaceholderText("https://example.com/pgn/games.pgn")
+            self.source_value.setPlaceholderText(
+                "https://example.com/pgn/games.pgn")
         elif index == 1:  # Local source option
             self.choose_button.setHidden(False)
             self.source_value.setText("")
@@ -220,7 +226,8 @@ class SourceHBox(QWidget):
         """ Opens a file explorer for the user to choose a file.
         Trigger: User clicks the "Choose File" button of the Horizontal Box.
         """
-        filename, _ = QFileDialog.getOpenFileName(self, "Select File", "", "PGN Files (*.pgn)")
+        filename, _ = QFileDialog.getOpenFileName(
+            self, "Select File", "", "PGN Files (*.pgn)")
         if filename:
             self.source_value.setText(filename)
 
@@ -241,8 +248,10 @@ class BottomBox(QWidget):
         self.ok_button = QPushButton("OK")
         apply_button.setObjectName("apply")
         self.ok_button.setObjectName("ok")
-        apply_button.clicked.connect(self.dialog.callback.on_apply_button_clicked)
-        self.ok_button.clicked.connect(self.dialog.callback.on_ok_button_clicked)
+        apply_button.clicked.connect(
+            self.dialog.callback.on_apply_button_clicked)
+        self.ok_button.clicked.connect(
+            self.dialog.callback.on_ok_button_clicked)
         self.ok_button.setEnabled(False)
 
         # Add all the above elements to layout.
