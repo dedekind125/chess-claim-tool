@@ -1,16 +1,16 @@
 # Introduction
-[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2FDedekind125%2Fchess-claim-tool.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2FDedekind125%2Fchess-claim-tool?ref=badge_shield)
 
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2FDedekind125%2Fchess-claim-tool.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2FDedekind125%2Fchess-claim-tool?ref=badge_shield)
 
 According to the official FIDE Regulations in some special cases, a game of chess could end in a draw either by a claim of the player or by the intervention of the arbiter.
 These cases are:
 
-* 3 Fold Repetition(claim by player)
-* 50 Moves Rule (claim by player)
-* 5 Fold Repetition (arbiter should intervene)
-* 75 Moves Rule (arbiter should intervene)
+- 3 Fold Repetition(claim by player)
+- 50 Moves Rule (claim by player)
+- 5 Fold Repetition (arbiter should intervene)
+- 75 Moves Rule (arbiter should intervene)
 
-*Detailed explanation: [FIDE Laws of Chess - Article 9](http://www.fide.com/fide/handbook.html?id=208&view=article)*
+_Detailed explanation: [FIDE Laws of Chess - Article 9](http://www.fide.com/fide/handbook.html?id=208&view=article)_
 
 The idea behind this program is to perform checks <b> in real-time updating pgn</b> for these claims and help the arbiters intervene accordingly.
 
@@ -23,6 +23,7 @@ The program is meant to work using either local pgn files and/or pgn files from 
 This tool is **not** officially approved by FIDE. The arbiter can consult the tool, but should always act as the FIDE Laws of chess mandate when a claim is made.
 
 ### Tool Accuracy
+
 The tool uses the [python-chess](https://github.com/niklasf/python-chess) external library to detect possible claims. The accuracy of the tool should be 100%. Until now, there are no reports of missed or incorrect claims made by the tool.
 
 # Operating System
@@ -31,33 +32,27 @@ This version is compatible with the macOS and Windows.
 
 **Download installation packages** through the release page: [https://github.com/Dedekind125/chess-claim-tool/releases](https://github.com/Dedekind125/chess-claim-tool/releases)
 
-
 # Dependencies
-* Python 3
-* PyQt 5  
-```
-pip install pyqt5
-```
-* [python-chess](https://github.com/niklasf/python-chess)by Niklas Fiekas  
-```
-pip install python-chess
-```
-* [Windows-10-Toast-Notifications](https://github.com/jithurjacob/Windows-10-Toast-Notifications)
-```
-pip install win10toast
-```
+
+- Python 3
+- PyQt 5
+- [python-chess](https://github.com/niklasf/python-chess) by Niklas Fiekas
+- [Windows-Toasts](https://github.com/DatGuy1/Windows-Toasts)
 
 # Usage
+
 The program should start by running the main.py
+
 ```
 $ python main.py
-```  
+```
 
 ## Screenshots
+
 Here is how the GUI looks like (on macOS) while the program is running:
 
 <img src="./screenshots/action.png" width="50%"/>
 
-
 ## License
+
 [![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2FDedekind125%2Fchess-claim-tool.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2FDedekind125%2Fchess-claim-tool?ref=badge_large)
