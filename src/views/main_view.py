@@ -22,11 +22,11 @@ from typing import Optional, Callable
 
 from PyQt5.QtCore import Qt, QSize, QEvent
 from PyQt5.QtGui import QStandardItemModel, QPixmap, QMovie, QStandardItem, QColor
-from PyQt5.QtWidgets import (QMainWindow, QWidget, QTreeView, QPushButton, QDesktopWidget,
+from PyQt5.QtWidgets import (QMainWindow, QApplication,  QWidget, QTreeView, QPushButton, QDesktopWidget,
                              QAbstractItemView, QHBoxLayout, QVBoxLayout, QLabel, QStatusBar, QMessageBox, QAction,
                              QDialog)
 
-from src.Claims import ClaimType
+from src.models.claims import ClaimType
 from src.helpers import resource_path, Status
 
 if platform.system() == "Darwin":
@@ -48,14 +48,14 @@ def sources_warning():
 
 class ChessClaimView(QMainWindow):
     ICON_SIZE = 16
-    __slots__ = ["callbacks", "claims_table", "live_pgn_option", "claims_table_model", "button_box", "ok_pixmap",
+    __slots__ = ["claims_table", "live_pgn_option", "claims_table_model", "button_box", "ok_pixmap",
                  "error_pixmap", "source_label", "source_image", "download_label", "download_image", "scan_label",
                  "scan_image", "spinner", "status_bar", "about_dialog", "notification"]
 
-    def __init__(self) -> None:
+    def __init__(self, controller: QApplication) -> None:
         super().__init__()
+        self.controller = controller
 
-        self.callbacks = None
         self.resize(720, 275)
         self.setWindowTitle('Chess Claim Tool')
         self.center()
@@ -96,9 +96,9 @@ class ChessClaimView(QMainWindow):
         self.create_status_bar()
 
         self.button_box.set_scan_button_callback(
-            self.callbacks.on_scan_button_clicked)
+            self.controller.on_scan_button_clicked)
         self.button_box.set_stop_button_callback(
-            self.callbacks.on_stop_button_clicked)
+            self.controller.on_stop_button_clicked)
 
         container_layout = QVBoxLayout()
         container_layout.setSpacing(0)
@@ -122,7 +122,7 @@ class ChessClaimView(QMainWindow):
 
         about_menu = menu_bar.addMenu('&Help')
         about_menu.addAction(about_action)
-        about_action.triggered.connect(self.callbacks.on_about_clicked)
+        about_action.triggered.connect(self.controller.on_about_clicked)
 
     def create_claims_table(self) -> None:
         self.claims_table.setFocusPolicy(Qt.NoFocus)
@@ -140,7 +140,7 @@ class ChessClaimView(QMainWindow):
         sources_button = QPushButton("Add Sources")
         sources_button.setObjectName("sources")
         sources_button.clicked.connect(
-            self.callbacks.on_sources_button_clicked)
+            self.controller.on_sources_button_clicked)
 
         self.source_image.setObjectName("source-image")
         self.download_image.setObjectName("download-image")
@@ -165,8 +165,8 @@ class ChessClaimView(QMainWindow):
             self.claims_table.resizeColumnToContents(index)
 
     def set_callbacks(self, callbacks) -> None:
-        """ Connect the Slots """
-        self.callbacks = callbacks
+        """ Connect the callbacks """
+        self.controller = callbacks
 
     def add_item_to_table(self, entry: list) -> None:
         """ Add new row to the claimsTable
@@ -399,7 +399,7 @@ class ChessClaimView(QMainWindow):
             event: The exit QEvent.
         """
         try:
-            if self.callbacks.scan_worker.is_running:
+            if self.controller.scan_worker.is_running:
                 exit_dialog = QMessageBox()
                 exit_dialog.setWindowTitle("Warning")
                 exit_dialog.setText("Scanning in Progress")

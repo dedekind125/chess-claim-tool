@@ -34,10 +34,12 @@ class AddSourceDialog(QDialog):
         sources_cnt(int): The number of the sources in the dialog.
     """
     ICON_SIZE = 20
-    __callback__ = ['callback', 'layout', 'bottomBox', 'sources', 'source_cnt']
+    # __slots__ = ['layout', 'bottomBox', 'sources', 'source_cnt']
 
-    def __init__(self) -> None:
+    def __init__(self, controller) -> None:
         super().__init__()
+        self.controller = controller
+
         self.setModal(True)
         self.setMinimumWidth(420)
         self.resize(420, 100)
@@ -45,8 +47,6 @@ class AddSourceDialog(QDialog):
 
         self.setWindowFlags(self.windowFlags() ^
                             Qt.WindowContextHelpButtonHint)
-
-        self.callback = None
         self.layout = None
         self.bottomBox = None
         self.sources = []
@@ -56,7 +56,7 @@ class AddSourceDialog(QDialog):
         """ Initialize GUI components. """
 
         # Create the Apply & Ok Button Box.
-        self.bottomBox = BottomBox(self)
+        self.bottomBox = BottomBox(self.controller)
 
         # Create the Add New Source Icon.
         add_source_button = QPushButton("")
@@ -96,9 +96,6 @@ class AddSourceDialog(QDialog):
     def add_default_source(self) -> None:
         self.add_source(0, "")
 
-    def set_callback(self, callback) -> None:
-        self.callback = callback
-
     def enable_ok_button(self) -> None:
         self.bottomBox.change_ok_status(True)
 
@@ -122,8 +119,8 @@ class SourceHBox(QWidget):
     Attributes:
         dialog: The Source Dialog with the Horizontal Box is located on.
     """
-    __callback__ = ['dialog', 'select_source', 'source_value', 'choose_button', 'status_image', 'ok_pixmap',
-                    'error_pixmap']
+    __slots__ = ['dialog', 'select_source', 'source_value', 'choose_button', 'status_image', 'ok_pixmap',
+                 'error_pixmap']
 
     def __init__(self, dialog: AddSourceDialog) -> None:
         super().__init__()
@@ -157,7 +154,7 @@ class SourceHBox(QWidget):
             QSize(self.dialog.ICON_SIZE, self.dialog.ICON_SIZE))
         delete_button.setObjectName('DeleteSource')
         delete_button.clicked.connect(
-            partial(self.dialog.callback.on_delete_button_clicked, self))
+            partial(self.dialog.controller.on_delete_button_clicked, self))
 
         # Add all the above elements to layout.
         layout = QHBoxLayout()
@@ -237,21 +234,19 @@ class BottomBox(QWidget):
     Attributes:
         dialog: The Source Dialog with the Horizontal Box is located on.
     """
-    __slots__ = ['dialog', 'ok_button']
+    # __slots__ = ['controller', 'ok_button']
 
-    def __init__(self, dialog: AddSourceDialog) -> None:
+    def __init__(self, controller) -> None:
         super().__init__()
-        self.dialog = dialog
+        self.controller = controller
 
         # Create the Apply and Ok Buttons.
         apply_button = QPushButton("Apply")
         self.ok_button = QPushButton("OK")
         apply_button.setObjectName("apply")
         self.ok_button.setObjectName("ok")
-        apply_button.clicked.connect(
-            self.dialog.callback.on_apply_button_clicked)
-        self.ok_button.clicked.connect(
-            self.dialog.callback.on_ok_button_clicked)
+        apply_button.clicked.connect(self.controller.on_apply_button_clicked)
+        self.ok_button.clicked.connect(self.controller.on_ok_button_clicked)
         self.ok_button.setEnabled(False)
 
         # Add all the above elements to layout.

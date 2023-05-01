@@ -23,8 +23,8 @@ from threading import Thread
 from PyQt5.QtCore import QRunnable, QThread, pyqtSignal
 from chess.pgn import read_game
 
-from src.Claims import get_players
-from src.DownloadPgn import check_download, download_pgn
+from src.models.claims import get_players
+from src.models.download import check_download, download_pgn
 from src.helpers import get_appdata_path, Status
 
 
