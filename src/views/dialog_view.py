@@ -34,7 +34,7 @@ class AddSourceDialog(QDialog):
         sources_cnt(int): The number of the sources in the dialog.
     """
     ICON_SIZE = 20
-    # __slots__ = ['layout', 'bottomBox', 'sources', 'source_cnt']
+    __slots__ = ['controller', 'layout', 'bottomBox', 'sources', 'source_cnt']
 
     def __init__(self, controller) -> None:
         super().__init__()
@@ -232,9 +232,9 @@ class SourceHBox(QWidget):
 class BottomBox(QWidget):
     """ Provides a Horizontal Box with two Buttons and a checkbox.
     Attributes:
-        dialog: The Source Dialog with the Horizontal Box is located on.
+        controller: The controller of the source dialog.
     """
-    # __slots__ = ['controller', 'ok_button']
+    __slots__ = ['controller', 'ok_button']
 
     def __init__(self, controller) -> None:
         super().__init__()

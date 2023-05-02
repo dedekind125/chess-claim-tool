@@ -27,10 +27,10 @@ from PyQt5.QtWidgets import QApplication
 from PyQt5.QtCore import QThreadPool
 
 from src.views.dialog_view import SourceHBox
-from src.views.main_view import ChessClaimView
+from src.views.main_view import ChessClaimView, sources_warning
 from src.views.dialog_view import AddSourceDialog
 from src.models.claims import Claims
-from src.models.workers import DownloadGames, MakePgn, Scan, Stop
+from src.models.workers import CheckDownload, DownloadGames, MakePgn, Scan, Stop
 from src.helpers import get_appdata_path, Status
 
 
@@ -41,7 +41,8 @@ class ChessClaimController(QApplication):
         model: Object of the Claims Class.
         view: The main views(GUI) of the application.
     """
-    # __slots__ = ["view", "model", "sources_dialog"]
+    __slots__ = ['view', 'model', 'sources_dialog', 'make_pgn_worker',
+                 'stop_worker', 'download_worker', 'scan_worker']
 
     def __init__(self) -> None:
         super().__init__(sys.argv)
@@ -197,7 +198,6 @@ class ChessClaimController(QApplication):
 
 class SourceDialogController:
     """ Handles user interaction with the GUI of the dialog. """
-    # __slots__ = ['view']
 
     def __init__(self) -> None:
         self.view = AddSourceDialog(self)
@@ -205,7 +205,7 @@ class SourceDialogController:
         self.threadPool = QThreadPool()
         self.filepaths = []
         self.downloads = dict()
-        self.apply_mutex_lock = Lock()
+        self.apply_lock = Lock()
 
     def do_start(self) -> None:
         """ Perform startup operations and shows the dialog.
@@ -255,10 +255,10 @@ class SourceDialogController:
 
         Trigger: User clicks the "Delete" Button(Trash Icon) on the Source Dialog.
         """
-        self.apply_mutex_lock.acquire()
+        self.apply_lock.acquire()
         self.remove_hbox_refs(source_hbox)
         self.view.remove_hbox(source_hbox)
-        self.apply_mutex_lock.release()
+        self.apply_lock.release()
 
     def remove_hbox_refs(self, hbox: SourceHBox) -> None:
         """ Removes the entries (values) of the target sourceHbox from the downloads and filepaths structures
@@ -279,12 +279,11 @@ class SourceDialogController:
 
         Trigger: User clicks the "Apply" Button on the Source Dialog.
         """
-        self.apply_mutex_lock.acquire()
+        self.apply_lock.acquire()
 
         self.filepaths = []
         self.downloads = dict()
 
-        # Create a Thread to complete the operations.
         apply_thread = Thread(target=self.on_apply_thread)
         apply_thread.daemon = True
         apply_thread.start()
@@ -297,13 +296,10 @@ class SourceDialogController:
 
         Trigger: User clicks the "OK" Button of the Source Dialog.
         """
-
-        # Create a Thread to complete the operations.
         exit_thread = Thread(target=self.on_exit_thread)
         exit_thread.daemon = True
         exit_thread.start()
 
-        # Close the Dialog
         self.view.accept()
         self.view.close()
 
@@ -325,20 +321,17 @@ class SourceDialogController:
                     source_hbox.set_status(Status.ERROR)
 
         self.threadPool.waitForDone()
-        self.apply_mutex_lock.release()
+        self.apply_lock.release()
 
         if self.filepaths:
             self.view.enable_ok_button()
 
     def on_exit_thread(self) -> None:
         """ Function called by Thread to perform the operations of the on_okButton_clicked."""
-
-        # Download the pgn files
         download_list_worker = DownloadGames(self.downloads)
         download_list_worker.start()
         download_list_worker.wait()
 
-        #  Make the games.pgn
         make_pgn_worker = MakePgn(self.filepaths)
         make_pgn_worker.start()
         make_pgn_worker.join()

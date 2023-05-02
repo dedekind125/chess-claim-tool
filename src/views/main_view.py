@@ -48,7 +48,7 @@ def sources_warning():
 
 class ChessClaimView(QMainWindow):
     ICON_SIZE = 16
-    __slots__ = ["claims_table", "live_pgn_option", "claims_table_model", "button_box", "ok_pixmap",
+    __slots__ = ["controller", "claims_table", "live_pgn_option", "claims_table_model", "button_box", "ok_pixmap",
                  "error_pixmap", "source_label", "source_image", "download_label", "download_image", "scan_label",
                  "scan_image", "spinner", "status_bar", "about_dialog", "notification"]
 
