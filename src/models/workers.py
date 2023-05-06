@@ -16,9 +16,12 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
+from __future__ import annotations
+
 import os.path
 import time
 from threading import Thread
+from typing import List, TYPE_CHECKING
 
 from PyQt5.QtCore import QRunnable, QThread, pyqtSignal
 from chess.pgn import read_game
@@ -27,18 +30,25 @@ from src.models.claims import get_players
 from src.models.download import check_download, download_pgn
 from src.helpers import get_appdata_path, Status
 
+if TYPE_CHECKING:
+    from src.controllers import SourceDialogController
+    from src.views.dialog_view import SourceHBox
+    from src.models.claims import Claims
+    from threading import Event, Lock
+    from PyQt5.QtWidgets import QAction
+
 
 class CheckDownload(QRunnable):
     """ Checks if the web sources are valid. (Used by Source Dialog)
     Attributes:
-        slots: Object of ChessClaimSlots.
+        controller: Object of SourceDialogController.
         source: The web source to be checked.
     """
-    __slots__ = ["slots", "source", "download_id"]
+    __slots__ = ["controller", "source", "download_id"]
 
-    def __init__(self, slots, source, download_id):
+    def __init__(self, controller: SourceDialogController, source: SourceHBox, download_id: int):
         super().__init__()
-        self.slots = slots
+        self.controller = controller
         self.source = source
         self.download_id = download_id
 
@@ -46,54 +56,53 @@ class CheckDownload(QRunnable):
         url = self.source.get_value()
         if check_download(url):
             self.source.set_status(Status.OK)
-            if url not in self.slots.downloads:
-                self.slots.add_valid_url(url, self.download_id)
+            if url not in self.controller.downloads:
+                self.controller.add_valid_url(url, self.download_id)
         else:
             self.source.set_status(Status.ERROR)
 
 
 class DownloadGames(QThread):
-    """ Downloads a list of sources from the web. It has 2 modes, either downloading
-    continuously or just download once.
+    """ Downloads a list of sources from the web.
 
     Attributes:
         downloads: The list of urls to download.
-        is_loop(bool): True if downloading continuously, else download once.
+        stop_event: 
     """
-    status_signal = pyqtSignal(Status)  # Signal to update GUI.
+    status_signal = pyqtSignal(Status)
     INTERVAL = 4
-    __slots__ = ["downloads", "is_loop", "is_running", "app_path"]
+    __slots__ = ["downloads", "stop_event", "app_path"]
 
-    def __init__(self, downloads, is_loop=False):
+    def __init__(self, downloads: List[str], stop_event: Event = None):
         super().__init__()
         self.downloads = downloads
-        self.is_loop = is_loop
-        self.is_running = False
+        self.stop_event = stop_event
         self.app_path = get_appdata_path()
 
     def run(self) -> None:
-        self.is_running = True
-        while self.is_running:
-            for url in self.downloads:
-                status = Status.OK
-                data = download_pgn(url)
-                if not data:
-                    status = Status.ERROR
+        if not self.stop_event:
+            return self.download_pgns()
+        
+        while not self.stop_event.is_set():
+            self.download_pgns()
+            self.stop_event.wait(self.INTERVAL)
+    
+    def download_pgns(self):
+        for url in self.downloads:
+            status = Status.OK
 
-                self.status_signal.emit(status)
-                filename = self.downloads[url]
-                try:
-                    with open(filename, "wb") as file:
-                        file.write(data)
-                except (FileNotFoundError, TypeError):
-                    self.status_signal.emit(Status.ERROR)
-                    continue
-            if not self.is_loop:
-                break
-            time.sleep(self.INTERVAL)
+            data = download_pgn(url)
+            if not data:
+                status = Status.ERROR
+            self.status_signal.emit(status)
 
-    def stop(self):
-        self.is_running = False
+            filename = self.downloads[url]
+            try:
+                with open(filename, "wb") as file:
+                    file.write(data)
+            except (FileNotFoundError, TypeError):
+                self.status_signal.emit(Status.ERROR)
+                continue
 
 
 class Scan(QThread):
@@ -109,24 +118,22 @@ class Scan(QThread):
     """
     __slots__ = ["is_running", "filename", "claims", "lock", "live_pgn_option"]
 
-    add_entry_signal = pyqtSignal(tuple)    # Signal to update the GUI.
-    status_signal = pyqtSignal(Status)      # Signal to update the GUI.
+    add_entry_signal = pyqtSignal(tuple)
+    status_signal = pyqtSignal(Status)
     INTERVAL = 4
 
-    def __init__(self, claims, filename, lock, live_pgn_option):
+    def __init__(self, claims: Claims, filename: str, lock: Lock, live_pgn_option: QAction, stop_event: Event):
         super().__init__()
-        self.is_running = False
         self.filename = filename
         self.claims = claims
         self.lock = lock
         self.live_pgn_option = live_pgn_option
+        self.stop_event = stop_event
 
     def run(self):
-        self.is_running = True
         last_size = 0
-        time.sleep(1.2)  # For synchronization purposes.
 
-        while self.is_running:
+        while not self.stop_event.is_set():
             try:
                 size_of_pgn = os.path.getsize(self.filename)
             except FileNotFoundError:
@@ -139,21 +146,24 @@ class Scan(QThread):
             self.status_signal.emit(Status.WAIT)
             last_size = size_of_pgn
 
-            if not self.is_running:
-                break
-            time.sleep(self.INTERVAL)
+            self.stop_event.wait(self.INTERVAL)
 
     def check_pgn(self):
         self.lock.acquire()
+
         with open(self.filename) as pgn:
-            while self.is_running:
+            while not self.stop_event.is_set():
                 game = read_game(pgn)
+
                 if not game:
                     break
+
                 if self.live_pgn_option.isChecked() and game.headers["Result"] != "*":
                     continue
+
                 if get_players(game) in self.claims.dont_check:
                     continue
+
                 entries = self.claims.check_game(game)
                 for entry in entries:
                     self.add_entry_signal.emit(entry)
@@ -161,11 +171,8 @@ class Scan(QThread):
         self.lock.release()
 
     @staticmethod
-    def is_file_updated(last_size, current_size):
+    def is_file_updated(last_size: int, current_size: int):
         return current_size != 0 and last_size != current_size
-
-    def stop(self):
-        self.is_running = False
 
 
 class Stop(QThread):
@@ -178,86 +185,80 @@ class Stop(QThread):
         make_pgn_worker: Running thread, object of makePgn Class.
         scan_worker: Running thread, object of Scan Class.
     """
+    enable_signal = pyqtSignal()
+    disable_signal = pyqtSignal()
 
-    enable_signal = pyqtSignal()  # Signal to update the GUI.
-    disable_signal = pyqtSignal()  # Signal to update the GUI.
-
-    def __init__(self, model, make_pgn_worker, scan_worker, download_worker=None):
+    def __init__(self, stop_event: Event, 
+                 make_pgn_worker: Thread, 
+                 scan_worker: QThread, 
+                 download_worker: QThread = None):
         super().__init__()
-        self.model = model
+        self.stop_event = stop_event
         self.download_worker = download_worker
         self.make_pgn_worker = make_pgn_worker
         self.scan_worker = scan_worker
 
     def run(self):
         self.disable_signal.emit()
+        self.stop_event.set()
 
-        # Stop all the treads
-        try:
-            self.download_worker.stop()
+        if self.download_worker:
             self.download_worker.wait()
-        except AttributeError:
-            pass
-        try:
-            self.make_pgn_worker.stop()
-            self.scan_worker.stop()
-            self.scan_worker.wait()
-            self.make_pgn_worker.join()
-        except AttributeError:
-            pass
+        self.scan_worker.wait()
+        self.make_pgn_worker.join()
 
         self.enable_signal.emit()
-
-        """ Clear all the variables storing information from the model
-        in order to be ready for the new scan. """
-        self.model.empty_dont_check()
-        self.model.empty_entries()
 
 
 class MakePgn(Thread):
     """ Makes a combined pgn of all the sources available (using the filePathList).
-    It has 2 modes, either make a new pgn continuously or just once.
+    The thread execution can be stop by "setting" the event (`event.set()`).
+    If the event is not provided the thread will only execute once.
 
     Attributes:
         filepaths: A list that contains all the files path(or url) which are valid.
-        is_loop: True if making the pgn continously, else makes the pgn once.
+        event: The event that is responsible for the execution of the thread.
         lock: The fileLock for the games.pgn between CheckPgn and MakePgn threads.
     """
     INTERVAL = 4
-    __slots__ = ["filepaths", "is_loop", "is_running", "lock", "daemon"]
+    __slots__ = ["filepaths", "event", "is_running", "lock", "daemon"]
 
-    def __init__(self, filepaths, is_loop=False, lock=None):
+    def __init__(self, filepaths: List[str], event: Event = None, lock: Lock = None):
         super().__init__()
         self.filepaths = filepaths
-        self.is_loop = is_loop
-        self.is_running = False
         self.lock = lock
+        self.event = event
         self.daemon = True
 
         app_path = get_appdata_path()
         self.filename = os.path.join(app_path, "games.pgn")
 
     def run(self) -> None:
-        self.is_running = True
-        while self.is_running:
-            data = bytes()
-            for filepath in self.filepaths:
-                try:
-                    with open(filepath, "rb") as in_file:
-                        data += "\n\n".encode("utf-8") + in_file.read()
-                except FileNotFoundError:
-                    continue
+        if not self.event:
+            return self.make_pgn()
 
-            if self.lock:
-                self.lock.acquire()
-            with open(self.filename, "wb") as file:
-                file.write(data)
-            if self.lock:
-                self.lock.release()
+        while not self.event.is_set():
+            self.make_pgn()
+            self.event.wait(self.INTERVAL)
 
-            if not self.is_loop:
-                break
-            time.sleep(self.INTERVAL)
+    def make_pgn(self):
+        data = bytes()
+        for filepath in self.filepaths:
+            try:
+                with open(filepath, "rb") as in_file:
+                    data += "\n\n".encode("utf-8") + in_file.read()
+            except FileNotFoundError:
+                continue
 
-    def stop(self):
-        self.is_running = False
+        self.lock_file()
+        with open(self.filename, "wb") as file:
+            file.write(data)
+        self.release_file()
+    
+    def lock_file(self):
+        if self.lock:
+            self.lock.acquire()
+
+    def release_file(self):
+        if self.lock:
+            self.lock.release()

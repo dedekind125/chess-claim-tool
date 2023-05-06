@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import sys
 import os.path
 import json
-from threading import Thread, Lock
+from threading import Event, Thread, Lock
 from typing import List
 
 from PyQt5.QtWidgets import QApplication
@@ -51,9 +51,11 @@ class ChessClaimController(QApplication):
         self.sources_dialog = None
 
         self.make_pgn_worker = None
-        self.stop_worker = None
         self.download_worker = None
         self.scan_worker = None
+        self.stop_worker = None
+
+        self.stop_event = Event()
 
     def do_start(self) -> None:
         """ Perform startup operations and shows the dialog.
@@ -93,7 +95,7 @@ class ChessClaimController(QApplication):
 
         """ If the scan thread is alive it means the scan button is already
         clicked before. So if the user click it again nothing should happen."""
-        if self.scan_worker and self.scan_worker.is_running:
+        if self.scan_worker and self.scan_worker.isRunning():
             return
 
         self.view.clear_table()
@@ -113,19 +115,23 @@ class ChessClaimController(QApplication):
 
         trigger: User clicks the "Stop" Button on the Main Window.
         """
-        if self.scan_worker and not self.scan_worker.is_running:
+        if not self.scan_worker or not self.scan_worker.isRunning():
             return
 
-        if self.download_worker:
-            self.stop_worker = Stop(
-                self.model, self.make_pgn_worker, self.scan_worker, self.download_worker)
-        else:
-            self.stop_worker = Stop(
-                self.model, self.make_pgn_worker, self.scan_worker)
+        self.stop_worker = Stop(self.stop_event, self.make_pgn_worker, self.scan_worker, self.download_worker)
 
         self.stop_worker.enable_signal.connect(self.on_stop_enable_status)
         self.stop_worker.disable_signal.connect(self.on_stop_disable_status)
         self.stop_worker.start()
+        self.stop_worker.wait()
+
+        """ Clear all the variables storing information from the model
+        in order to be ready for the new scan. """
+        self.model.empty_dont_check()
+        self.model.empty_entries()
+
+        # Reset stop event
+        self.stop_event.clear()
 
     def on_about_clicked(self) -> None:
         """ Calls the views in order to display the About Dialog.
@@ -176,13 +182,13 @@ class ChessClaimController(QApplication):
     def start_download_worker(self, downloads: List[str]) -> None:
         if not downloads:
             return
-        self.download_worker = DownloadGames(downloads, True)
+        self.download_worker = DownloadGames(downloads, self.stop_event)
         self.download_worker.status_signal.connect(self.update_download_status)
         self.download_worker.start()
 
     def start_make_png_worker(self, lock: Lock) -> None:
         filepaths = self.sources_dialog.get_filepath_list()
-        self.make_pgn_worker = MakePgn(filepaths, True, lock)
+        self.make_pgn_worker = MakePgn(filepaths, self.stop_event, lock)
         self.make_pgn_worker.start()
 
     def start_scan_worker(self, lock: Lock) -> None:
@@ -190,7 +196,7 @@ class ChessClaimController(QApplication):
         filename = os.path.join(app_path, "games.pgn")
 
         self.scan_worker = Scan(
-            self.model, filename, lock, self.view.live_pgn_option)
+            self.model, filename, lock, self.view.live_pgn_option, self.stop_event)
         self.scan_worker.add_entry_signal.connect(self.update_claims_table)
         self.scan_worker.status_signal.connect(self.update_bar_scan_status)
         self.scan_worker.start()
