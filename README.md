@@ -50,3 +50,6 @@ $ python main.py
 Here is how the GUI looks like (on macOS) while the program is running:
 
 <img src="./screenshots/action.png" width="50%"/>
+
+## Support
+<a href="https://www.buymeacoffee.com/thansernt" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/default-orange.png" alt="Buy Me A Coffee" height="41" width="174"></a>
