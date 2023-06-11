@@ -1,3 +1,4 @@
+<a href="https://www.buymeacoffee.com/thansernt" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/default-orange.png" alt="Buy Me A Coffee" height="41" width="174"></a>
 # Introduction
 
 According to the official FIDE Regulations in some special cases, a game of chess could end in a draw either by a claim of the player or by the intervention of the arbiter.
@@ -50,3 +51,4 @@ $ python main.py
 Here is how the GUI looks like (on macOS) while the program is running:
 
 <img src="./screenshots/action.png" width="50%"/>
+
