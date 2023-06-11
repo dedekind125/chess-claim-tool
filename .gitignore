@@ -7,4 +7,9 @@ pyvenv.cfg
 icons/.DS_Store
 icons/Thumbs.db
 screenshots/.DS_Store
-build/.DS_Store
+.idea
+
+build/*
+!build/mac.spec
+!build/windows.spec
+!build/README.md
