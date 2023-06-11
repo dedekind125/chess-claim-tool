@@ -17,21 +17,20 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-import sys
-import os.path
 import json
+import os.path
+import sys
 from threading import Event, Thread, Lock
-from typing import List
+from typing import List, Dict
 
-from PyQt5.QtWidgets import QApplication
 from PyQt5.QtCore import QThreadPool
-
-from src.views.dialog_view import SourceHBox
-from src.views.main_view import ChessClaimView, sources_warning
-from src.views.dialog_view import AddSourceDialog
+from PyQt5.QtWidgets import QApplication
+from src.helpers import get_appdata_path, Status
 from src.models.claims import Claims
 from src.models.workers import CheckDownload, DownloadGames, MakePgn, Scan, Stop
-from src.helpers import get_appdata_path, Status
+from src.views.dialog_view import AddSourceDialog
+from src.views.dialog_view import SourceHBox
+from src.views.main_view import ChessClaimView, sources_warning
 
 
 class ChessClaimController(QApplication):
@@ -41,8 +40,8 @@ class ChessClaimController(QApplication):
         model: Object of the Claims Class.
         view: The main views(GUI) of the application.
     """
-    __slots__ = ['view', 'model', 'sources_dialog', 'make_pgn_worker',
-                 'stop_worker', 'download_worker', 'scan_worker']
+    __slots__ = ['view', 'model', 'sources_dialog', 'make_pgn_worker', 'stop_worker', 'download_worker', 'scan_worker',
+                 'stop_event']
 
     def __init__(self) -> None:
         super().__init__(sys.argv)
@@ -75,8 +74,7 @@ class ChessClaimController(QApplication):
         """
         if not self.sources_dialog:
             self.sources_dialog = SourceDialogController()
-            self.sources_dialog.view.accepted.connect(
-                self.update_status_bar_sources)
+            self.sources_dialog.view.accepted.connect(self.update_status_bar_sources)
             self.sources_dialog.do_start()
             return
 
@@ -99,7 +97,7 @@ class ChessClaimController(QApplication):
             return
 
         self.view.clear_table()
-        self.view.change_scan_button_text(Status.WAIT)
+        self.view.change_scan_button_text(Status.ACTIVE)
 
         download_list = self.sources_dialog.get_download_list()
         if download_list:
@@ -179,9 +177,10 @@ class ChessClaimController(QApplication):
     def update_bar_scan_status(self, status: Status) -> None:
         self.view.set_scan_status(status)
 
-    def start_download_worker(self, downloads: List[str]) -> None:
+    def start_download_worker(self, downloads: Dict[str, str]) -> None:
         if not downloads:
             return
+
         self.download_worker = DownloadGames(downloads, self.stop_event)
         self.download_worker.status_signal.connect(self.update_download_status)
         self.download_worker.start()
@@ -195,8 +194,7 @@ class ChessClaimController(QApplication):
         app_path = get_appdata_path()
         filename = os.path.join(app_path, "games.pgn")
 
-        self.scan_worker = Scan(
-            self.model, filename, lock, self.view.live_pgn_option, self.stop_event)
+        self.scan_worker = Scan(self.model, filename, lock, self.view.live_pgn_option, self.stop_event)
         self.scan_worker.add_entry_signal.connect(self.update_claims_table)
         self.scan_worker.status_signal.connect(self.update_bar_scan_status)
         self.scan_worker.start()
@@ -234,7 +232,7 @@ class SourceDialogController:
     def get_valid_sources(self) -> List[SourceHBox]:
         return self.view.sources
 
-    def get_download_list(self) -> List[str]:
+    def get_download_list(self) -> Dict[str, str]:
         return self.downloads
 
     def has_valid_sources(self) -> bool:
@@ -348,6 +346,7 @@ class SourceDialogController:
         """ Saves the valid sources to the JSON file """
         data = [{"option": source.get_source_index(), "value": source.get_value()}
                 for source in self.view.sources]
+
         with open(os.path.join(self.app_path, 'sources.json'), 'w') as file:
             json.dump(data, file, indent=4)
 

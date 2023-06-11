@@ -1,12 +1,13 @@
-from AppKit import NSImage
 from Foundation import NSUserNotification, NSUserNotificationCenter
 
-class Notification():
+
+class Notification:
     """ The Notification System using Apple's native Notifications System
     Attributes:
         notification: The notification
         center: Apple notification center.
     """
+
     def __init__(self):
         self.notification = NSUserNotification.alloc().init()
         self.center = NSUserNotificationCenter.defaultUserNotificationCenter()
@@ -19,7 +20,7 @@ class Notification():
         """Clear any displayed alerts we have posted."""
         self.center.removeAllDeliveredNotifications()
 
-    def notify(self,title,subtitle,text):
+    def notify(self, title, subtitle, text):
         """ Sets notification details and send the notification to the
         notification center.
         Args:

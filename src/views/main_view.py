@@ -16,23 +16,27 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
+from __future__ import annotations
+
 import platform
 from datetime import datetime
-from typing import Optional, Callable
+from typing import Optional, Callable, TYPE_CHECKING
 
 from PyQt5.QtCore import Qt, QSize, QEvent
 from PyQt5.QtGui import QStandardItemModel, QPixmap, QMovie, QStandardItem, QColor
-from PyQt5.QtWidgets import (QMainWindow, QApplication,  QWidget, QTreeView, QPushButton, QDesktopWidget,
+from PyQt5.QtWidgets import (QMainWindow, QWidget, QTreeView, QPushButton, QDesktopWidget,
                              QAbstractItemView, QHBoxLayout, QVBoxLayout, QLabel, QStatusBar, QMessageBox, QAction,
                              QDialog)
-
-from src.models.claims import ClaimType
 from src.helpers import resource_path, Status
+from src.models.claims import ClaimType
 
 if platform.system() == "Darwin":
     from src.MacNotification import Notification
 elif platform.system() == "Windows":
     from windows_toasts import WindowsToaster, ToastImageAndText2, ToastDisplayImage, ToastDuration
+
+if TYPE_CHECKING:
+    from src.controllers import ChessClaimController
 
 
 def sources_warning():
@@ -41,8 +45,7 @@ def sources_warning():
     warning_dialog.setIcon(warning_dialog.Warning)
     warning_dialog.setWindowTitle("Warning")
     warning_dialog.setText("PGN File(s) Not Found")
-    warning_dialog.setInformativeText(
-        "Please enter at least one valid PGN source.")
+    warning_dialog.setInformativeText("Please enter at least one valid PGN source.")
     warning_dialog.exec()
 
 
@@ -52,7 +55,7 @@ class ChessClaimView(QMainWindow):
                  "error_pixmap", "source_label", "source_image", "download_label", "download_image", "scan_label",
                  "scan_image", "spinner", "status_bar", "about_dialog", "notification"]
 
-    def __init__(self, controller: QApplication) -> None:
+    def __init__(self, controller: ChessClaimController) -> None:
         super().__init__()
         self.controller = controller
 
@@ -85,8 +88,7 @@ class ChessClaimView(QMainWindow):
         """ Centers the window on the screen """
         screen = QDesktopWidget().screenGeometry()
         size = self.geometry()
-        self.move(int((screen.width() - size.width()) / 2),
-                  int((screen.height() - size.height()) / 2))
+        self.move(int((screen.width() - size.width()) / 2), int((screen.height() - size.height()) / 2))
 
     def set_gui(self) -> None:
         """ Initialize GUI components. """
@@ -95,10 +97,8 @@ class ChessClaimView(QMainWindow):
         self.create_claims_table()
         self.create_status_bar()
 
-        self.button_box.set_scan_button_callback(
-            self.controller.on_scan_button_clicked)
-        self.button_box.set_stop_button_callback(
-            self.controller.on_stop_button_clicked)
+        self.button_box.set_scan_button_callback(self.controller.on_scan_button_clicked)
+        self.button_box.set_stop_button_callback(self.controller.on_stop_button_clicked)
 
         container_layout = QVBoxLayout()
         container_layout.setSpacing(0)
@@ -139,8 +139,7 @@ class ChessClaimView(QMainWindow):
     def create_status_bar(self) -> None:
         sources_button = QPushButton("Add Sources")
         sources_button.setObjectName("sources")
-        sources_button.clicked.connect(
-            self.controller.on_sources_button_clicked)
+        sources_button.clicked.connect(self.controller.on_sources_button_clicked)
 
         self.source_image.setObjectName("source-image")
         self.download_image.setObjectName("download-image")
@@ -164,10 +163,6 @@ class ChessClaimView(QMainWindow):
         for index in range(0, 6):
             self.claims_table.resizeColumnToContents(index)
 
-    def set_callbacks(self, callbacks) -> None:
-        """ Connect the callbacks """
-        self.controller = callbacks
-
     def add_item_to_table(self, entry: list) -> None:
         """ Add new row to the claimsTable
         Args:
@@ -180,8 +175,7 @@ class ChessClaimView(QMainWindow):
         timestamp = str(datetime.now().strftime('%H:%M:%S'))
         row = []
         count = str(self.claims_table_model.rowCount() + 1)
-        items = [count, timestamp, claim_type.value,
-                 board_number, players, move]
+        items = [count, timestamp, claim_type.value, board_number, players, move]
 
         """ Convert each item(str) to QStandardItem, make the necessary stylistic
         additions and append it to row."""
@@ -226,8 +220,7 @@ class ChessClaimView(QMainWindow):
             newToast = ToastImageAndText2()
             newToast.SetHeadline(claim_type.value)
             newToast.SetBody(f"{players} \n{move}")
-            newToast.AddImage(ToastDisplayImage.fromPath(
-                resource_path("logo.ico")))
+            newToast.AddImage(ToastDisplayImage.fromPath(resource_path("logo.ico")))
             newToast.SetDuration(ToastDuration("short"))
 
             self.notification.show_toast(newToast)
@@ -240,7 +233,7 @@ class ChessClaimView(QMainWindow):
         self.claims_table_model.removeRow(index)
 
     def remove_rows_by_claim_type(self, claim_type: ClaimType, players: str) -> None:
-        """ Removes a existing row from the Claims Table when same players made
+        """ Removes an existing row from the Claims Table when same players made
         the same type of draw with a new move - or they made 5-Fold Repetition
         over the 3-Fold or 75 Moves Rule over 50 moves Rule.
 
@@ -394,19 +387,18 @@ class ChessClaimView(QMainWindow):
     def closeEvent(self, event: QEvent):
         """ Reimplement the close button
         If the program is actively scanning a pgn a warning dialog shall be raised
-        in order to make sure that the user didn't clicked the close Button accidentally.
+        in order to make sure that the user didn't click the close Button accidentally.
         Args:
             event: The exit QEvent.
         """
         try:
-            if self.controller.scan_worker.is_running:
+            if self.controller.scan_worker.isRunning():
                 exit_dialog = QMessageBox()
                 exit_dialog.setWindowTitle("Warning")
                 exit_dialog.setText("Scanning in Progress")
                 exit_dialog.setInformativeText("Do you want to quit?")
                 exit_dialog.setIcon(exit_dialog.Warning)
-                exit_dialog.setStandardButtons(
-                    QMessageBox.Yes | QMessageBox.Cancel)
+                exit_dialog.setStandardButtons(QMessageBox.Yes | QMessageBox.Cancel)
                 exit_dialog.setDefaultButton(QMessageBox.Cancel)
                 replay = exit_dialog.exec()
 
@@ -462,8 +454,7 @@ class AboutDialog(QDialog):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("About")
-        self.setWindowFlags(self.windowFlags() ^
-                            Qt.WindowContextHelpButtonHint)
+        self.setWindowFlags(self.windowFlags() ^ Qt.WindowContextHelpButtonHint)
 
     def set_gui(self) -> None:
         """ Initialize GUI components. """

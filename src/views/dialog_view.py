@@ -18,12 +18,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 from functools import partial
+from typing import List
 
 from PyQt5.QtCore import Qt, QSize
 from PyQt5.QtGui import QIcon, QPixmap
 from PyQt5.QtWidgets import (QDialog, QWidget, QComboBox, QLineEdit, QPushButton,
                              QLabel, QHBoxLayout, QVBoxLayout, QFileDialog)
-
 from src.helpers import resource_path, Status
 
 
@@ -49,7 +49,7 @@ class AddSourceDialog(QDialog):
                             Qt.WindowContextHelpButtonHint)
         self.layout = None
         self.bottomBox = None
-        self.sources = []
+        self.sources: List[SourceHBox] = []
         self.sources_cnt = 0
 
     def set_gui(self) -> None:
@@ -134,8 +134,7 @@ class SourceHBox(QWidget):
         # Create the Line Edit for user input.
         self.source_value = QLineEdit()
         self.source_value.textChanged.connect(self.line_edit_changed)
-        self.source_value.setPlaceholderText(
-            "https://example.com/pgn/games.pgn")
+        self.source_value.setPlaceholderText("https://example.com/pgn/games.pgn")
 
         # Choose File Button in case of the Local File Option
         self.choose_button = QPushButton("Choose File")
@@ -150,11 +149,9 @@ class SourceHBox(QWidget):
         # Create the Delete Button
         delete_button = QPushButton("")
         delete_button.setIcon(QIcon(resource_path("delete_icon.png")))
-        delete_button.setIconSize(
-            QSize(self.dialog.ICON_SIZE, self.dialog.ICON_SIZE))
+        delete_button.setIconSize(QSize(self.dialog.ICON_SIZE, self.dialog.ICON_SIZE))
         delete_button.setObjectName('DeleteSource')
-        delete_button.clicked.connect(
-            partial(self.dialog.controller.on_delete_button_clicked, self))
+        delete_button.clicked.connect(partial(self.dialog.controller.on_delete_button_clicked, self))
 
         # Add all the above elements to layout.
         layout = QHBoxLayout()
@@ -198,8 +195,7 @@ class SourceHBox(QWidget):
         if index == 0:  # Web download option
             self.choose_button.setHidden(True)
             self.source_value.setText("")
-            self.source_value.setPlaceholderText(
-                "https://example.com/pgn/games.pgn")
+            self.source_value.setPlaceholderText("https://example.com/pgn/games.pgn")
         elif index == 1:  # Local source option
             self.choose_button.setHidden(False)
             self.source_value.setText("")
@@ -223,8 +219,7 @@ class SourceHBox(QWidget):
         """ Opens a file explorer for the user to choose a file.
         Trigger: User clicks the "Choose File" button of the Horizontal Box.
         """
-        filename, _ = QFileDialog.getOpenFileName(
-            self, "Select File", "", "PGN Files (*.pgn)")
+        filename, _ = QFileDialog.getOpenFileName(self, "Select File", "", "PGN Files (*.pgn)")
         if filename:
             self.source_value.setText(filename)
 

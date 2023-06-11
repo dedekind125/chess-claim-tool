@@ -19,16 +19,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 from __future__ import annotations
 
 import os.path
-import time
 from threading import Thread
-from typing import List, TYPE_CHECKING
+from typing import List, TYPE_CHECKING, Dict
 
 from PyQt5.QtCore import QRunnable, QThread, pyqtSignal
 from chess.pgn import read_game
-
+from src.helpers import get_appdata_path, Status
 from src.models.claims import get_players
 from src.models.download import check_download, download_pgn
-from src.helpers import get_appdata_path, Status
 
 if TYPE_CHECKING:
     from src.controllers import SourceDialogController
@@ -67,13 +65,13 @@ class DownloadGames(QThread):
 
     Attributes:
         downloads: The list of urls to download.
-        stop_event: 
+        stop_event: A stop signal that is emitted to stop this thread execution
     """
     status_signal = pyqtSignal(Status)
     INTERVAL = 4
     __slots__ = ["downloads", "stop_event", "app_path"]
 
-    def __init__(self, downloads: List[str], stop_event: Event = None):
+    def __init__(self, downloads: Dict[str, str], stop_event: Event = None):
         super().__init__()
         self.downloads = downloads
         self.stop_event = stop_event
@@ -82,11 +80,11 @@ class DownloadGames(QThread):
     def run(self) -> None:
         if not self.stop_event:
             return self.download_pgns()
-        
+
         while not self.stop_event.is_set():
             self.download_pgns()
             self.stop_event.wait(self.INTERVAL)
-    
+
     def download_pgns(self):
         for url in self.downloads:
             status = Status.OK
@@ -114,9 +112,9 @@ class Scan(QThread):
         claims: An Object of Claims Class.
         lock: The fileLock for the games.pgn between CheckPgn and MakePgn threads.
         live_pgn_option: The checkbox object on the menu.
-        is_running(bool): True if the thread is running, false otherwise.
+        stop_event: A stop signal that is emitted to stop this thread execution
     """
-    __slots__ = ["is_running", "filename", "claims", "lock", "live_pgn_option"]
+    __slots__ = ["filename", "claims", "lock", "live_pgn_option", "stop_event"]
 
     add_entry_signal = pyqtSignal(tuple)
     status_signal = pyqtSignal(Status)
@@ -180,7 +178,7 @@ class Stop(QThread):
     and resets the model for the next scan.
 
     Attributes:
-        model: Object of Claims Class.
+        stop_event: The stop event that can signal the termination of threads
         download_worker: Running thread, object of Download Class.
         make_pgn_worker: Running thread, object of makePgn Class.
         scan_worker: Running thread, object of Scan Class.
@@ -188,9 +186,9 @@ class Stop(QThread):
     enable_signal = pyqtSignal()
     disable_signal = pyqtSignal()
 
-    def __init__(self, stop_event: Event, 
-                 make_pgn_worker: Thread, 
-                 scan_worker: QThread, 
+    __slots__ = ["stop_event", "make_pgn_worker", "scan_worker", "download_worker"]
+
+    def __init__(self, stop_event: Event, make_pgn_worker: Thread, scan_worker: QThread,
                  download_worker: QThread = None):
         super().__init__()
         self.stop_event = stop_event
@@ -212,22 +210,22 @@ class Stop(QThread):
 
 class MakePgn(Thread):
     """ Makes a combined pgn of all the sources available (using the filePathList).
-    The thread execution can be stop by "setting" the event (`event.set()`).
+    The thread execution can be stopped by "setting" the event (`stop_event.set()`).
     If the event is not provided the thread will only execute once.
 
     Attributes:
         filepaths: A list that contains all the files path(or url) which are valid.
-        event: The event that is responsible for the execution of the thread.
+        stop_event: The event that is responsible for the execution of the thread.
         lock: The fileLock for the games.pgn between CheckPgn and MakePgn threads.
     """
     INTERVAL = 4
-    __slots__ = ["filepaths", "event", "is_running", "lock", "daemon"]
+    __slots__ = ["filepaths", "stop_event", "is_running", "lock", "daemon"]
 
-    def __init__(self, filepaths: List[str], event: Event = None, lock: Lock = None):
+    def __init__(self, filepaths: List[str], stop_event: Event = None, lock: Lock = None):
         super().__init__()
         self.filepaths = filepaths
         self.lock = lock
-        self.event = event
+        self.event = stop_event
         self.daemon = True
 
         app_path = get_appdata_path()
@@ -254,7 +252,7 @@ class MakePgn(Thread):
         with open(self.filename, "wb") as file:
             file.write(data)
         self.release_file()
-    
+
     def lock_file(self):
         if self.lock:
             self.lock.acquire()

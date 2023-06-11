@@ -29,11 +29,11 @@ def resource_path(relative_path: str) -> str:
     Args:
         relative_path(str): The relative path of a resource.
     """
-    if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
+    if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'): # Pyinstaller
         base_path = sys._MEIPASS
     else:
         if relative_path.endswith(".css"):
-            base_path = os.path.abspath(".")
+            base_path = os.path.abspath(os.path.join("src", "views"))
         else:
             base_path = os.path.abspath("icons")
 
