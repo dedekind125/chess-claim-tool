@@ -31,7 +31,7 @@ from src.helpers import resource_path, Status
 from src.models.claims import ClaimType
 
 if platform.system() == "Darwin":
-    from src.MacNotification import Notification
+    from src.notifications.mac import Notification
 elif platform.system() == "Windows":
     from windows_toasts import WindowsToaster, ToastImageAndText2, ToastDisplayImage, ToastDuration
 

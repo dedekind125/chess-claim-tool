@@ -1,2 +1,2 @@
-pyobjc==8.1
-pyobjc-core==8.1
+pyobjc==9.2
+pyobjc-core==9.2
