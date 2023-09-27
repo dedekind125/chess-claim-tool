@@ -1,4 +1,4 @@
-<a href="https://www.buymeacoffee.com/thansernt" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/default-orange.png" alt="Buy Me A Coffee" height="41" width="174"></a>
+[![Github All Releases](https://img.shields.io/github/downloads/dedekind125/chess-claim-tool/total.svg)]()
 # Introduction
 
 According to the official FIDE Regulations in some special cases, a game of chess could end in a draw either by a claim of the player or by the intervention of the arbiter.
