@@ -312,8 +312,7 @@ class SourceDialogController:
         download_id = 0
         for source_hbox in self.view.sources:
             if source_hbox.has_url():
-                self.threadPool.start(CheckDownload(
-                    self, source_hbox, download_id))
+                self.threadPool.start(CheckDownload(self, source_hbox, download_id))
                 download_id += 1
             elif source_hbox.has_local():
                 filepath = source_hbox.get_value()

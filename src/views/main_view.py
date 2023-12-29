@@ -191,19 +191,19 @@ class ChessClaimView(QMainWindow):
         self.notify(claim_type, players, move)
 
     @staticmethod
-    def create_standard_item(item: list, idx: int) -> QStandardItem:
-        item = QStandardItem(item)
-        item.setTextAlignment(Qt.AlignCenter)
+    def create_standard_item(item: str, idx: int) -> QStandardItem:
+        q_item = QStandardItem(item)
+        q_item.setTextAlignment(Qt.AlignCenter)
 
         if idx == 2:
-            font = item.font()
+            font = q_item.font()
             font.setBold(True)
-            item.setFont(font)
+            q_item.setFont(font)
 
         if item == ClaimType.FIVEFOLD.value or item == ClaimType.SEVENTYFIVE_MOVES.value:
-            item.setData(QColor(255, 0, 0), Qt.ForegroundRole)
+            q_item.setData(QColor(255, 0, 0), Qt.ForegroundRole)
 
-        return item
+        return q_item
 
     def notify(self, claim_type: ClaimType, players: str, move: str) -> None:
         """ Send notification depending on the OS.

@@ -43,13 +43,11 @@ class Claims:
         self.entries = set()
 
     def check_game(self, game: Game) -> set:
-        """ Checks the game for 3 Fold Repetitions, 5 Fold Repetitions,
-        50 Move Draw Rule and for the 75 Move Draw Rule.
+        """ Checks the game for 3 Fold Repetitions, 5 Fold Repetitions, 50 Move Draw Rule and for the 75 Move Draw Rule.
         Args:
             game: The game to be checked.
         """
         move_counter = 0
-
         board = game.board()
         players = get_players(game)
         board_number = self.get_board_number(game)
@@ -59,6 +57,7 @@ class Claims:
         for move in game.mainline_moves():
             san_move = str(board.san(move))
             board.push(move)
+
             move_counter += 1
             printable_move = self.get_printable_move(move_counter, san_move)
 
@@ -87,7 +86,7 @@ class Claims:
 
     @staticmethod
     def get_printable_move(move_counter: int, san_move: str) -> str:
-        """ Returns: The move as it's been displayed in the claimsTable.
+        """ Returns: The move as it's been displayed in the view.
         Args:
             move_counter: The number of the moves played in the game.
             san_move: The SAN representation of the move
@@ -102,10 +101,11 @@ class Claims:
 
     @staticmethod
     def get_board_number(game: Game) -> str:
-        try:
+        if "Board" in game.headers:
             return str(game.headers["Board"])
-        except KeyError:
+        if "Round" in game.headers:
             return str(game.headers["Round"])
+        return "-"
 
 
 class ClaimType(Enum):

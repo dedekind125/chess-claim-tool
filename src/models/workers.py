@@ -37,10 +37,11 @@ if TYPE_CHECKING:
 
 
 class CheckDownload(QRunnable):
-    """ Checks if the web sources are valid. (Used by Source Dialog)
+    """ Checks if a web source is valid.
     Attributes:
         controller: Object of SourceDialogController.
         source: The web source to be checked.
+        download_id: A unique download id
     """
     __slots__ = ["controller", "source", "download_id"]
 
@@ -225,19 +226,19 @@ class MakePgn(Thread):
         super().__init__()
         self.filepaths = filepaths
         self.lock = lock
-        self.event = stop_event
+        self.stop_event = stop_event
         self.daemon = True
 
         app_path = get_appdata_path()
         self.filename = os.path.join(app_path, "games.pgn")
 
     def run(self) -> None:
-        if not self.event:
+        if not self.stop_event:
             return self.make_pgn()
 
-        while not self.event.is_set():
+        while not self.stop_event.is_set():
             self.make_pgn()
-            self.event.wait(self.INTERVAL)
+            self.stop_event.wait(self.INTERVAL)
 
     def make_pgn(self):
         data = bytes()
