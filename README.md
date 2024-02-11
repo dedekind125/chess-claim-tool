@@ -19,7 +19,7 @@ The program is meant to work using either local pgn files and/or pgn files from 
 
 # Disclaimer
 
-This tool is **not** officially approved by FIDE. The arbiter can consult the tool, but should always act as the FIDE Laws of chess mandate when a claim is made.
+This tool is **not** officially approved by FIDE. The arbiter can consult the tool but should always follow the official FIDE Laws of Chess when a claim is made.
 
 ### Tool Accuracy
 
